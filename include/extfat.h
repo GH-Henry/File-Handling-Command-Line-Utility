@@ -37,7 +37,6 @@ extern "C"
         short int BootSignature;
         unsigned char ExcessSpace;
     } Main_Boot;
-  
 
 #ifdef __cplusplus
     extern "C"
