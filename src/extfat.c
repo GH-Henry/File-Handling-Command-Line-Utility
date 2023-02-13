@@ -1,33 +1,36 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "parse_args.h"
 #include "copy_extfat.h"
 
 int main(int argc, char *argv[])
 {
-   argument_struct_t *arguments = get_arguments(argc, argv);
-   if(arguments == NULL)
+   argument_struct_t arguments = parseArgs(argc, argv);
+   if(arguments.inFile == NULL && arguments.hFlag == false)
    {
-      // Might explain how to use the program
-      // Exit the program
+      printf("Error: missing '-i inputFile'\n");
+      // Maybe use printHelp() here 
+      exit(EXIT_FAILURE);
    }
 
-   // Waiting for confirmation with teammembers to
-   // determine if a switch-case is appropriate.
-   printf("\n");
-   switch(0) // arguments->instruction is suppose to go in here
+   // Maybe put the if statement chain below in a function
+   if(arguments.hFlag == true)
    {
-      case 'h':
-         print_help();
-         break;
-      case 'c':
-         copy_mmap(arguments->inFile, arguments->outFile);
-         break;
-      default:
-         ;
+      printHelp();
+   }
+   else if(arguments.cFlag == true)
+   {
+      mmapCopy(arguments.inFile, arguments.outFile);
+   }
+   else if(arguments.vFlag == true)
+   {
+      // Call the verify function (to be implemented in a later iteration)
+   }
+   else
+   {
+      printf("Unknown command...\n");
    }
 
-   // free_argument_struct(arguments);
-   // arguments = NULL;
-   return 0;
+   return EXIT_SUCCESS;
 }

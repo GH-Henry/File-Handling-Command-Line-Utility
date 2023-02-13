@@ -15,5 +15,8 @@
             "binaryPath": "/workspaces/cse_3310_exFAT/extfat",
             "binaryArgs": []
         }
-    ]
+    ],
+    "files.associations": {
+        "stdlib.h": "c"
+    }
 }

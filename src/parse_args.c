@@ -2,17 +2,13 @@
 
 #include "parse_args.h"
 
-void free_argument_struct(argument_struct_t *arguments)
-{
-   printf("free_argument_struct arguments: arguments = %p\n", arguments);
-}
-
-void print_help()
+void printHelp()
 {
 }
 
-argument_struct_t *get_arguments(int argc, char *argv[])
+argument_struct_t parseArgs(int argc, char *argv[])
 {
-   printf("get_arguments arguments: argc = %d, argv = %p\n", argc, argv);
-   return NULL;
+   argument_struct_t returnValue = {NULL, NULL, false, false, false};
+   printf("parseArgs arguments: argc = %d, argv = %p\n", argc, argv);
+   return returnValue;
 }

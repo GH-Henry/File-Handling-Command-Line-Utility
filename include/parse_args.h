@@ -6,20 +6,19 @@ extern "C"
 {
 #endif
 
-// Waiting for task1 to give struct definition
+#include <stdbool.h>
+
 typedef struct
 {
-   char *inFile;
-   char *outFile;
-   char *flags;
-   char instruction;
+    char *inFile;
+    char *outFile;
+    bool hFlag;
+    bool cFlag;
+    bool vFlag;
 } argument_struct_t;
 
-
-// Waiting for task1 for function protoypes
-void free_argument_struct(argument_struct_t *arguments);
-argument_struct_t *get_arguments(int argc, char *argv[]);
-void print_help();
+void printHelp();
+argument_struct_t parseArgs(int argc, char *argv[]);
 
 #ifdef __cplusplus
     extern "C"

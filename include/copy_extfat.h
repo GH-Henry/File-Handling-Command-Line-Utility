@@ -7,7 +7,7 @@ extern "C"
 #endif
 
 // Waiting for task2 for function protoypes
-void copy_mmap(char *input_file, char *output_file);
+void mmapCopy(char *input_file, char *output_file);
 
 #ifdef __cplusplus
     extern "C"
