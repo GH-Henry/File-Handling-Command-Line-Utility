@@ -10,7 +10,7 @@ int main(int argc, char *argv[])
    if(arguments.inFile == NULL && arguments.hFlag == false)
    {
       printf("Error: missing '-i inputFile'\n");
-      // Maybe use printHelp() here 
+      printHelp();
       exit(EXIT_FAILURE);
    }
 
@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
    }
    else if(arguments.vFlag == true)
    {
+      printf("Verify function has not been implemented yet\n");
       // Call the verify function (to be implemented in a later iteration)
    }
    else
