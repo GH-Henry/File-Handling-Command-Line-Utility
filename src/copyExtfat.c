@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "copy_extfat.h"
+#include "copyExtfat.h"
 
 void mmapCopy(char *input_file, char *output_file)
 {

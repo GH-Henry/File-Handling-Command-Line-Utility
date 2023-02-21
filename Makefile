@@ -19,7 +19,7 @@ CPPINCS=-I./include
 all:mmap fread unit_tests extfat crc_example
 
 # the utility that is a focus of this project
-extfat:src/extfat.c common/routines.c src/parse_args.c src/copy_extfat.c
+extfat:src/extfat.c common/routines.c src/parseArgs.c src/copyExtfat.c
 	${CC} ${CPPFLAGS} ${CPPINCS} -o $@ $^
 
 

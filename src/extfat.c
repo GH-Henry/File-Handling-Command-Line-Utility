@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "parse_args.h"
-#include "copy_extfat.h"
+#include "parseArgs.h"
+#include "copyExtfat.h"
 
 int main(int argc, char *argv[])
 {
