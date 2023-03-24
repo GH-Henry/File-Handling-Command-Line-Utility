@@ -13,15 +13,16 @@ void printHelp()
    printf("Help:\n\"-h\"\n\n");
    printf("Copy file:\n\"-c\"\n\n");
    printf("Verify file:\n\"-v\"\n\n");
+   printf("Print directories:\n\"-d fileName\"\n\n");
    printf("Input file (required):\n\"-i fileName\"\n\n");
    printf("Output file:\n\"-o fileName\"\n\n");
 }
 
 argument_struct_t parseArgs(int argc, char *argv[])
 {
-   argument_struct_t argStruct = {NULL, NULL, false, false, false};
+   argument_struct_t argStruct = {NULL, NULL, false, false, false, false};
    int opt = 0;
-   while((opt = getopt(argc, argv, "i:o:chv")) != -1)
+   while((opt = getopt(argc, argv, "i:o:chvd")) != -1)
    {
       switch(opt)
       {
@@ -42,6 +43,9 @@ argument_struct_t parseArgs(int argc, char *argv[])
             break;
          case 'v':
             argStruct.vFlag = true;
+            break;
+         case 'd':
+            argStruct.dFlag = true;
             break;
          case '?':
             if(optopt == 'o')

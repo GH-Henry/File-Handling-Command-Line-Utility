@@ -31,6 +31,10 @@ int main(int argc, char *argv[])
       printf("Verify function has not been implemented yet (Only 3 people worked on Iteration I)\n");
       // Call the verify function (to be implemented in a later iteration)
    }
+   else if(arguments.dFlag == true)
+   {
+      printf("Do stuff here\n");
+   }
    else
    {
       printf("Unknown option\n"

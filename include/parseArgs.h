@@ -15,6 +15,7 @@ typedef struct
     bool hFlag;
     bool cFlag;
     bool vFlag;
+    bool dFlag;
 } argument_struct_t;
 
 void printHelp();
