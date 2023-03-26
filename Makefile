@@ -32,7 +32,8 @@ munit_example:unit_tests/munit/example.c
 	${CC} ${CPPFLAGS}  unit_tests/munit/munit.c -I./unit_tests/munit/ ${CPPINCS} -o $@ $^
 
 # requirements tests
-
+system_tests: extfat
+	bash tests/system_tests.bash
 
 # example code
 mmap:examples/mmap.c  
@@ -45,7 +46,7 @@ crc_example:examples/crc_example.c
 	${CC} ${CPPFLAGS} ${CPPINCS} -o $@ $^ -lz
 
 # run tests
-tests: run_unit_tests run_tests
+tests: run_unit_tests system_tests
 
 run_unit_tests: munit_example
 	./munit_example
