@@ -3,6 +3,7 @@
 
 #include "parseArgs.h"
 #include "copyExtfat.h"
+#include "directoryExtfat.h"
 
 int main(int argc, char *argv[])
 {
@@ -33,7 +34,7 @@ int main(int argc, char *argv[])
    }
    else if(arguments.dFlag == true)
    {
-      printf("Do stuff here\n");
+      printAllDirectories();
    }
    else
    {

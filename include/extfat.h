@@ -1,10 +1,6 @@
 #pragma once
 
-/* ensure this header can be used in a C++ program */
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#include <sys/types.h>
 
 // This header defines the layout of data on an extfat disk image.
 // For the details, please refer to
@@ -36,7 +32,21 @@ typedef struct
     unsigned char ExcessSpace;
 } Main_Boot;
 
-#ifdef __cplusplus
-    extern "C"
-};
-#endif
+// This structure contains all of the information about a single disk
+// image file
+typedef struct
+{
+    // There are the disk image
+    Main_Boot *M_Boot;
+    Main_Boot *B_Boot;
+    void *FAT;
+    void *Data;
+    // To identify the file
+    char *fileName;
+    off_t size;
+    int fd; // The file descriptor
+    // For convenience, these values are extracted from the
+    // image
+    int SectorSize;
+    int FileLength;
+} fileInfo;
