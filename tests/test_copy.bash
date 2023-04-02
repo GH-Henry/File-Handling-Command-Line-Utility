@@ -3,7 +3,7 @@ echo "Copy Files Test"
 
 result1=($(/usr/bin/md5sum test.image))
 
-# this should be a call to extfat -c <infile> <outfile>
+#checks for the accuracy between the md5sum hashes of the two files. 
 ./extfat -i test.image -o test2.image -c
 
 

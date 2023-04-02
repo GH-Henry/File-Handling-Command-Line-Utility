@@ -81,6 +81,7 @@ int mapOutput(int fdread, size_t size, char *output) // Function that maps the r
    int fout = open(output, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);             
    reading = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fdread, 0);     //Passing in the read file 
    FILE *fp = fopen(output, "wb");
+
    printf("Size of before output file is %ld\n",ftell(fp));
    fseek(fp, size - 1, SEEK_END);                              //Seek to the end of the file and write a byte there using Fwrite to mark the size
    fwrite(&write_byte, sizeof(char), 1, fp);
@@ -113,6 +114,11 @@ int mapOutput(int fdread, size_t size, char *output) // Function that maps the r
    }
    memcpy(puting, reading, size);     //Map memory over
 
+   if (msync(puting, size, MS_SYNC) == -1) 
+   {
+        perror("msync error");
+        return -1;
+   }
    if (munmap(reading, size) < 0)
    {
       perror("unmap");

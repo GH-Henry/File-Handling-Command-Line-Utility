@@ -33,7 +33,7 @@ munit_example:unit_tests/munit/example.c
 
 # requirements tests
 system_tests: extfat
-	bash tests/system_tests.bash
+	bash tests/grading_test.bash
 
 # example code
 mmap:examples/mmap.c  
