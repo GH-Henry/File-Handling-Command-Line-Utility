@@ -18,8 +18,8 @@
 
 void mmapCopy(char *input_file, char *output_file)
 {
-     int fd = open(input_file, O_RDWR);
-
+      int fd = open(input_file, O_RDWR);
+      
    if (fd == -1)
    {
       perror("file open ");

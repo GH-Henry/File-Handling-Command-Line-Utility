@@ -13,6 +13,7 @@ void printHelp()
    printf("Help:\n\"-h\"\n\n");
    printf("Copy file:\n\"-c\"\n\n");
    printf("Verify file:\n\"-v\"\n\n");
+   printf("Print directory:\n\"-p\"\n\n");
    printf("Input file (required):\n\"-i fileName\"\n\n");
    printf("Output file:\n\"-o fileName\"\n\n");
 }
@@ -21,7 +22,7 @@ argument_struct_t parseArgs(int argc, char *argv[])
 {
    argument_struct_t argStruct = {};
    int opt = 0;
-   while((opt = getopt(argc, argv, "i:o:chvd")) != -1)
+   while((opt = getopt(argc, argv, "i:o:chvp")) != -1)
    {
       switch(opt)
       {
@@ -35,15 +36,19 @@ argument_struct_t parseArgs(int argc, char *argv[])
                argStruct.outFile = argStruct.inFile;
             break;
          case 'h':
+            //help
             argStruct.flags[0] = true;
             break;
          case 'c':
+            //copy
             argStruct.flags[1] = true;
             break;
          case 'v':
+            //verify
             argStruct.flags[2] = true;
             break;
-         case 'd':
+         case 'p':
+            //print directory
             argStruct.flags[3] = true;
             break;
          case '?':

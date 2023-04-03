@@ -15,7 +15,7 @@ enum flagTypes
     help = 0,
     copy = 1,
     verify = 2,
-    directory = 3
+    printDirectory = 3
 };
 
 typedef struct

@@ -21,21 +21,13 @@ int main(int argc, char *argv[])
       return EXIT_FAILURE;
    }
 
-   bootStruct.mainBoot = arguments.inFile;
-   bootStruct.backupBoot = arguments.inFile;
-   bootStruct.fileName = arguments.inFile;
-
-   // Allows the use of different functions with indexing
-   // indexing system to be added once more copy functions are defined.
-   void (*copyFunctions[])(char *, char *) = {mmapCopy};
-
    if(arguments.flags[0] == true)
    {
       printHelp();
    }
    else if(arguments.flags[1] == true)
    {
-      copyFunctions[0](arguments.inFile, arguments.outFile);
+      mmapCopy(arguments.inFile, arguments.outFile);
    }
    else if(arguments.flags[2] == true)
    {
