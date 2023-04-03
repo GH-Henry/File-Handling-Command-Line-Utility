@@ -10,17 +10,17 @@
 #
 # No intermediate .o files or libraries are created
 
-CPPFLAGS=-Wall -Wextra -O0 -std=c17 -g3 -fsanitize=address
+CFLAGS=-Wall -Wextra -O0 -std=c17 -g3 -fsanitize=address -fsanitize=bounds-strict
 # note address sanitizer "-fsanitize=address" is new. it can be
 # removed from the makefile if it causes problems.
 
-CPPINCS=-I./include
+CINCS=-I./include
 
 all:mmap fread unit_tests extfat crc_example
 
 # the utility that is a focus of this project
 extfat:src/extfat.c common/routines.c src/parseArgs.c src/copyExtfat.c
-	${CC} ${CPPFLAGS} ${CPPINCS} -o $@ $^
+	${CC} ${CFLAGS} ${CINCS} -o $@ $^
 
 
 # unit tests
@@ -29,20 +29,20 @@ unit_tests: munit_example
 # this test needs to be deleted once we get some real tests
 # for the problem at hand
 munit_example:unit_tests/munit/example.c
-	${CC} ${CPPFLAGS}  unit_tests/munit/munit.c -I./unit_tests/munit/ ${CPPINCS} -o $@ $^
+	${CC} ${CFLAGS}  unit_tests/munit/munit.c -I./unit_tests/munit/ ${CINCS} -o $@ $^
 
 # requirements tests
 
 
 # example code
 mmap:examples/mmap.c  
-	${CC} ${CPPFLAGS} ${CPPINCS} -o $@ $^
+	${CC} ${CFLAGS} ${CINCS} -o $@ $^
 
 fread:examples/fread.c  
-	${CC} ${CPPFLAGS} ${CPPINCS} -o $@ $^
+	${CC} ${CFLAGS} ${CINCS} -o $@ $^
 
 crc_example:examples/crc_example.c
-	${CC} ${CPPFLAGS} ${CPPINCS} -o $@ $^ -lz
+	${CC} ${CFLAGS} ${CINCS} -o $@ $^ -lz
 
 # run tests
 tests: run_unit_tests run_tests

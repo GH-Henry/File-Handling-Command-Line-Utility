@@ -19,9 +19,9 @@ void printHelp()
 
 argument_struct_t parseArgs(int argc, char *argv[])
 {
-   argument_struct_t argStruct = {NULL, NULL, false, false, false};
+   argument_struct_t argStruct = {};
    int opt = 0;
-   while((opt = getopt(argc, argv, "i:o:chv")) != -1)
+   while((opt = getopt(argc, argv, "i:o:chvd")) != -1)
    {
       switch(opt)
       {
@@ -35,13 +35,16 @@ argument_struct_t parseArgs(int argc, char *argv[])
                argStruct.outFile = argStruct.inFile;
             break;
          case 'h':
-            argStruct.hFlag = true;
+            argStruct.flags[0] = true;
             break;
          case 'c':
-            argStruct.cFlag = true;
+            argStruct.flags[1] = true;
             break;
          case 'v':
-            argStruct.vFlag = true;
+            argStruct.flags[2] = true;
+            break;
+         case 'd':
+            argStruct.flags[3] = true;
             break;
          case '?':
             if(optopt == 'o')
@@ -58,3 +61,10 @@ argument_struct_t parseArgs(int argc, char *argv[])
    return argStruct;
 }
 
+int verifyBoot(Main_Boot *A, Main_Boot *B)
+{
+   if (memcmp(A, B, sizeof(Main_Boot)) == 0)
+      return 0;
+   else
+      return 1;
+}
