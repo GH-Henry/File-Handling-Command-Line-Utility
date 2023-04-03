@@ -1,12 +1,5 @@
 #pragma once
 
-/* ensure this header can be used in a C++ program */
-/*
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-*/
 // This header defines the layout of data on an extfat disk image.
 // For the details, please refer to
 // https://learn.microsoft.com/en-gb/windows/win32/fileio/exfat-specification
@@ -53,10 +46,3 @@ typedef struct
 } fileInfo;
 
 int verifyBoot(Main_Boot *A, Main_Boot *B);
-
-/*
-#ifdef __cplusplus
-    extern "C"
-};
-#endif
-*/
