@@ -35,7 +35,7 @@ munit_example:unit_tests/munit/example.c
 
 
 # example code
-mmap:examples/mmap.c  
+mmap:examples/mmap.c  common/routines.c
 	${CC} ${CPPFLAGS} ${CPPINCS} -o $@ $^
 
 fread:examples/fread.c  

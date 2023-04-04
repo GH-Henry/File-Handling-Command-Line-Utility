@@ -17,6 +17,13 @@
         }
     ],
     "files.associations": {
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "directoryextfat.h": "c",
+        "mman.h": "c",
+        "array": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c",
+        "copyextfat.h": "c"
     }
 }

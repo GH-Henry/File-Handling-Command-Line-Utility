@@ -16,6 +16,12 @@
 // https://learn.microsoft.com/en-gb/windows/win32/fileio/exfat-specification#74-file-directory-entry
 #define FILE_ATTRIBUTE_OFFSET 4
 
+// Finds cluster N
+#define FIND_CLUSTER(N, fp, clustHeapOffs, bytesPerSect, sectPerCuster) \
+    ((fp + clustHeapOffs * bytesPerSect) + ((N - 2) * bytesPerSect * sectPerCuster))
+
+// The following structs are based on the directories defined here
+// https://learn.microsoft.com/en-gb/windows/win32/fileio/exfat-specification
 typedef struct
 {
     union
@@ -66,38 +72,9 @@ typedef struct
     uint8_t FileName[30];
 } FileNameEntry;
 
-// Finds cluster N
-#define FIND_CLUSTER(N, fp, clustHeapOffs, bytesPerSect, sectPerCuster) \
-    ((fp + clustHeapOffs * bytesPerSect) + ((N - 2) * bytesPerSect * sectPerCuster))
-
-// Uses mmap DELETE THIS STUFF
-fileInfo openImageFile()
-{
-    fileInfo file = {};
-    // open the file system image file
-    file.fd = open("test.image", O_RDWR);
-    if (file.fd == -1)
-    {
-        perror("file open: ");
-        exit(0);
-    }
-
-    struct stat statbuf;
-    if (fstat(file.fd, &statbuf))
-    {
-        perror("stat of file:");
-        exit(0);
-    }
-    file.size = statbuf.st_size;
-    printf("The file size is %ld\n", file.size);
-    
-    file.M_Boot = (Main_Boot *)mmap(NULL, file.size, PROT_READ, MAP_PRIVATE, file.fd, 0);
-    return file;
-}
-// END OF DELET THIS STUFF
-
 void printName(char *charPtr, int legnthOfName, int dirLevel)
 {
+    // Prints the proper number of tabs dependidng on dirLevel
     for(int i = 0; i < dirLevel; i++)
     {
         printf("\t");
@@ -105,13 +82,15 @@ void printName(char *charPtr, int legnthOfName, int dirLevel)
 
     for(int i = 0; i < legnthOfName; i++)
     {
-        // In the event that the name is 
+        // In the event that the name is longer than 15 characters, then the next byte
+        // that charPtr will point at will be 0xc1 to signal another FileNameEntry,
+        // thus must offset by 2 to get to a printable character.
         if(*charPtr == (char)0xc1)
         {
             charPtr += 2;
         }
         printf("%c", *charPtr);
-        charPtr += 2;
+        charPtr += 2; // offset by 2 to get to the next character in the name
     }
 
     printf("\n");
@@ -123,25 +102,23 @@ void printDirectory(GenericDirectoryStruct *GDS, void *fp, int clustHeapOffs, in
     while (GDS[i].EntryType)
     {
         // Checks if if current GDS is FileAndDirectoryEntry (0x85)
-        // and the next GenericDirectoryStructur is a StreamExtensionEntry (0xc0)
-        // and the one after that is the FileNamEntry (0xc1)
+        // and the next GenericDirectoryStructure (i+1) is a StreamExtensionEntry (0xc0)
+        // and the one after that (i+2) is the FileNamEntry (0xc1)
         if (GDS[i].InUse && GDS[i].EntryType == 0x85 && GDS[i+1].EntryType == 0xc0 && GDS[i+2].EntryType == 0xc1)
         {
             FileAttributes *fileAttributes = (FileAttributes *)((void *)&GDS[i] + FILE_ATTRIBUTE_OFFSET);
             StreamExtensionEntry *streamExtEntry = (StreamExtensionEntry *)&GDS[i+1];
             FileNameEntry *fileNameEntry = (FileNameEntry *)&GDS[i+2];
 
-            // If the attribute of the file is a directory, then print its name and its files.
+            printName( (char *)fileNameEntry->FileName, streamExtEntry->NameLength, dirLevel );
+
+            // If the attribute of the file is a directory, then recursively call this function to print its
+            // contents, using its corresponding cluster, and increasing the directory level
             if (fileAttributes->Directory)
             {
-                printName( (char *)fileNameEntry->FileName, streamExtEntry->NameLength, dirLevel );
                 GenericDirectoryStruct *subGDS = FIND_CLUSTER(streamExtEntry->FirstCluster, fp, clustHeapOffs,
                                                               bytesPerSector, sectorsPerCluster);
                 printDirectory(subGDS, fp, clustHeapOffs, bytesPerSector, sectorsPerCluster, dirLevel+1);
-            }
-            else // Else just print the filename
-            {
-                printName( (char *)fileNameEntry->FileName, streamExtEntry->NameLength, dirLevel );
             }
         }
 
@@ -149,20 +126,9 @@ void printDirectory(GenericDirectoryStruct *GDS, void *fp, int clustHeapOffs, in
     }
 }
 
-void printAllDirectories()
+void printAllDirectoriesAndFiles(void *fp)
 {
-    // mmap the entire file into memory
-    // every data item we reference, will be relative to fp...
-    fileInfo file = openImageFile();
-    Main_Boot *MB = (Main_Boot *)file.M_Boot;
-    void *fp = (void *)MB;
-
-    if (fp == (void *)-1)
-    {
-       perror("mmap:");
-       exit(0);
-    }
-    
+    Main_Boot *MB = (Main_Boot *)fp;
     int bytesPerSector = 2 << (MB->BytesPerSectorShift - 1);
     int sectorsPerCluster = 2 << (MB->SectorsPerClusterShift - 1);
 
@@ -171,21 +137,5 @@ void printAllDirectories()
                                                bytesPerSector, sectorsPerCluster);
 
     printf("The directory listing\n");
-    // The directory listings are complicated.  This code just extracts the file names.
-    // it does not handle directories.
     printDirectory(GDS, fp, MB->ClusterHeapOffset, bytesPerSector, sectorsPerCluster, 1);
-
-    // unmap the file
-    if (munmap(fp, file.size))
-    {
-        perror("error from unmap:");
-        exit(0);
-    }
-
-    // close the file
-    if (close(file.fd))
-    {
-        perror("close:");
-    }
-    file.fd = 0;
 }
