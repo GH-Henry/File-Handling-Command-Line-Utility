@@ -6,6 +6,8 @@
 
 #include "extfat.h"
 #include "parseArgs.h"
+#include "copyExtfat.h"
+#include "routines.h"
 
 void printHelp()
 {
@@ -13,7 +15,7 @@ void printHelp()
    printf("Help:\n\"-h\"\n\n");
    printf("Copy file:\n\"-c\"\n\n");
    printf("Verify file:\n\"-v\"\n\n");
-   printf("Print directory:\n\"-p\"\n\n");
+   printf("Print directory:\n\"-d\"\n\n");
    printf("Input file (required):\n\"-i fileName\"\n\n");
    printf("Output file:\n\"-o fileName\"\n\n");
 }
@@ -47,7 +49,7 @@ argument_struct_t parseArgs(int argc, char *argv[])
             //verify
             argStruct.flags[2] = true;
             break;
-         case 'p':
+         case 'd':
             //print directory
             argStruct.flags[3] = true;
             break;

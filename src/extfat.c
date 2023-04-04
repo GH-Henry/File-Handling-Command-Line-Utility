@@ -4,15 +4,10 @@
 #include "parseArgs.h"
 #include "copyExtfat.h"
 #include "extfat.h"
+#include "util.h"
 
 int main(int argc, char *argv[])
 {
-   /*
-   Main_Boot *A = (Main_Boot*) (malloc(sizeof(Main_Boot)));
-   Main_Boot *B = (Main_Boot*) (malloc(sizeof(Main_Boot)));
-   */
-   fileInfo bootStruct;
-
    argument_struct_t arguments = parseArgs(argc, argv);
    if(arguments.inFile == NULL && arguments.flags[0] == false)
    {
@@ -20,6 +15,8 @@ int main(int argc, char *argv[])
              "Try \'./extfat -h\' for more information\n");
       return EXIT_FAILURE;
    }
+
+   fileInfo A = initFileInfoStruct(arguments.inFile);
 
    if(arguments.flags[0] == true)
    {
