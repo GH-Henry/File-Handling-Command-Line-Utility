@@ -1,5 +1,16 @@
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <stddef.h>
+#include <stdint.h>
+
 // This header defines the layout of data on an extfat disk image.
 // For the details, please refer to
 // https://learn.microsoft.com/en-gb/windows/win32/fileio/exfat-specification

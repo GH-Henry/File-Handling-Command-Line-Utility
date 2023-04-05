@@ -55,10 +55,10 @@ fileInfo initFileInfoStruct(char *fileName)
       exit(0);
    }
 
-   int bytesPerSector = 2 << (Main_Boot *)(MB.BytesPerSectorShift - 1); // Can be added to a property of the struct
+   int bytesPerSector = 2 << (file.mainBoot->BytesPerSectorShift - 1); // Can be added to a property of the struct
 
    file.backupBoot = (Main_Boot *)(file.fd + 12 * bytesPerSector);
 
-   file.FAT = (uint32_t *)((void *)file.fd + (MB->FatOffset * bytesPerSector));
+   file.FAT = (uint32_t *)((void *)file.fd + (file.mainBoot->FatOffset * bytesPerSector));
    return file;
 }

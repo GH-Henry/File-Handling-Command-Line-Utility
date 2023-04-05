@@ -1,14 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <stddef.h>
-#include <stdint.h>
-
 #include "extfat.h"
 
 // given a number N, this macro returns a pointer in the mmapped file
