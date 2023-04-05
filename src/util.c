@@ -2,6 +2,9 @@
 #include <stdlib.h>
 
 #include "util.h"
+#include "extfat.h"
+#include "copyExtfat.h"
+#include "routines.h"
 
 void freeFileInfoStruct(fileInfo *file)
 {
@@ -17,7 +20,7 @@ void freeFileInfoStruct(fileInfo *file)
    {
       perror("close:");
    }
-   fd = 0;
+   file->fd = 0;
 }
 
 fileInfo initFileInfoStruct(char *fileName)
@@ -31,31 +34,31 @@ fileInfo initFileInfoStruct(char *fileName)
    }
    off_t size = 0;
    struct stat statbuf;
-   if (fstat(fd, &statbuf))
+   if (fstat(file.fd, &statbuf))
    {
       perror("stat of file:");
       exit(0);
    }
    file.size = statbuf.st_size; // add size to the thing
    
-   file.mainBoot = = (Main_Boot *)mmap(NULL,
+   file.mainBoot = (Main_Boot *)mmap(NULL,
                            size,
                            PROT_READ,
                            MAP_PRIVATE,
-                           fd,
+                           file.fd,
                            0); // note the offset
 
     
-   if (fp == (void *)-1)
+   if (file.fd == (void *)-1)
    {
       perror("mmap:");
       exit(0);
    }
 
-   int bytesPerSector = 2 << (MB->BytesPerSectorShift - 1); // Can be added to a property of the struct
+   int bytesPerSector = 2 << (Main_Boot *)(MB.BytesPerSectorShift - 1); // Can be added to a property of the struct
 
-   file.backupBoot = (Main_Boot *)(fp + 12 * bytesPerSector);
+   file.backupBoot = (Main_Boot *)(file.fd + 12 * bytesPerSector);
 
-   file.FAT = (uint32_t *)((void *)fp + (MB->FatOffset * bytesPerSector));
+   file.FAT = (uint32_t *)((void *)file.fd + (MB->FatOffset * bytesPerSector));
    return file;
 }

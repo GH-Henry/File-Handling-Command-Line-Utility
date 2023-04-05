@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
    else if(arguments.flags[2] == true)
    {
       
-      int stat = verifyBoot(bootStruct.mainBoot, bootStruct.backupBoot);
+      int stat = verifyBoot(A.mainBoot, A.backupBoot);
       if(stat == 0)
          printf("Main Boot and Backup Boot are the same.\n");
       else

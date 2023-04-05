@@ -43,6 +43,7 @@ typedef struct
     // For convenience, these values are extracted from the image
     int SectorSize;
     int FileLength;
+    off_t size;
 } fileInfo;
 
 int verifyBoot(Main_Boot *A, Main_Boot *B);
