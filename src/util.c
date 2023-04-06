@@ -41,13 +41,12 @@ fileInfo initFileInfoStruct(char *fileName)
    }
    file.size = statbuf.st_size; // add size to the thing
    
-   file.mainBoot = (Main_Boot *)mmap(NULL,
-                           size,
-                           PROT_READ,
-                           MAP_PRIVATE,
-                           file.fd,
-                           0); // note the offset
-
+   file.mainBoot = (Main_Boot *)mmap(  NULL,
+                                       file.size,
+                                       PROT_READ,
+                                       MAP_PRIVATE,
+                                       file.fd,
+                                       0); // note the offset
     
    if (file.fd == (void *)-1)
    {
@@ -60,5 +59,6 @@ fileInfo initFileInfoStruct(char *fileName)
    file.backupBoot = (Main_Boot *)(file.fd + 12 * bytesPerSector);
 
    file.FAT = (uint32_t *)((void *)file.fd + (file.mainBoot->FatOffset * bytesPerSector));
+
    return file;
 }
