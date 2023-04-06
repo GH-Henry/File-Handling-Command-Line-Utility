@@ -32,7 +32,7 @@ fileInfo initFileInfoStruct(char *fileName)
       perror("file open: ");
       exit(0);
    }
-   off_t size = 0;
+
    struct stat statbuf;
    if (fstat(file.fd, &statbuf))
    {
@@ -48,7 +48,7 @@ fileInfo initFileInfoStruct(char *fileName)
                                        file.fd,
                                        0); // note the offset
     
-   if (file.fd == (void *)-1)
+   if (file.fd == -1)
    {
       perror("mmap:");
       exit(0);
@@ -56,9 +56,9 @@ fileInfo initFileInfoStruct(char *fileName)
 
    int bytesPerSector = 2 << (file.mainBoot->BytesPerSectorShift - 1); // Can be added to a property of the struct
 
-   file.backupBoot = (Main_Boot *)(file.fd + 12 * bytesPerSector);
-
-   file.FAT = (uint32_t *)((void *)file.fd + (file.mainBoot->FatOffset * bytesPerSector));
+   void* fd_ptr = (void*)(intptr_t)file.fd;
+   file.backupBoot = (Main_Boot *)((char*)fd_ptr + 12 * bytesPerSector);
+   file.FAT = (uint32_t *)(((char*)fd_ptr) + (file.mainBoot->FatOffset * bytesPerSector));
 
    return file;
 }
