@@ -67,11 +67,3 @@ argument_struct_t parseArgs(int argc, char *argv[])
 
    return argStruct;
 }
-
-int verifyBoot(Main_Boot *A, Main_Boot *B)
-{
-   if (memcmp(A, B, sizeof(Main_Boot)) == 0)
-      return 0;
-   else
-      return 1;
-}

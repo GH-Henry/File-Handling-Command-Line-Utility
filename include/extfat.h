@@ -56,5 +56,3 @@ typedef struct
     int FileLength;
     off_t size;
 } fileInfo;
-
-int verifyBoot(Main_Boot *A, Main_Boot *B);

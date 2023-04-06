@@ -62,3 +62,54 @@ fileInfo initFileInfoStruct(char *fileName)
 
    return file;
 }
+
+int verifyBoot(Main_Boot *A, Main_Boot *B)
+{
+   //BootCode usually different
+   if(A->BootCode != B->BootCode)
+      return 1;
+   if(A->BootSignature != B->BootSignature)
+      return 1;
+   if(A->BytesPerSectorShift != B->BytesPerSectorShift)
+      return 1;
+   if(A->ClusterCount != B->ClusterCount)
+      return 1;
+   if(A->ClusterHeapOffset != B->ClusterHeapOffset)
+      return 1;
+   if(A->DriveSelect != B->DriveSelect)
+      return 1;
+   if(A->ExcessSpace != B->ExcessSpace)
+      return 1;
+   if(A->FatLength != B->FatLength)
+      return 1;
+   if(A->FatOffset != B->FatOffset)
+      return 1;
+   if(A->FileSystemName != B->FileSystemName)
+      return 1;
+   if(A->FileSystemRevision != B->FileSystemRevision)
+      return 1;
+   if(A->FirstClusterOfRootDirectory != B->FirstClusterOfRootDirectory)
+      return 1;
+   if(A->JumpBoot != B->JumpBoot)
+      return 1;
+   if(A->MustBeZero != B->MustBeZero)
+      return 1;
+   if(A->NumberOfFats != B->NumberOfFats)
+      return 1;
+   if(A->PartitionOffset != B->PartitionOffset)
+      return 1;
+   if(A->PercentInUse != B->PercentInUse)
+      return 1;
+   if(A->Reserved != B->Reserved)
+      return 1;
+   if(A->SectorsPerClusterShift != B->SectorsPerClusterShift)
+      return 1;
+   if(A->VolumeFlags != B->VolumeFlags)
+      return 1;
+   if(A->VolumeLength != B->VolumeLength)
+      return 1;
+   if(A->VolumeSerialNumber != B->VolumeSerialNumber)
+      return 1;
+
+   return 0;
+}
