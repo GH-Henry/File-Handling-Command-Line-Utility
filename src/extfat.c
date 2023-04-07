@@ -28,21 +28,19 @@ int main(int argc, char *argv[])
    }
    else if(arguments.flags[2] == true)
    {
-      
       int stat = verifyBoot(A.mainBoot, A.backupBoot);
+      printf("BootCode 1: %d\n", A.mainBoot->ClusterCount);
+      printf("BootCode 2: %d\n", A.backupBoot->ClusterCount);
       if(stat == 0)
-         printf("Main Boot and Backup Boot are the same.\n");
+         printf("Main Boot and Backup Boot are the same.\nstat = 0\n");
       else
       {
-         printf("Main Boot and Backup Boot are not the same.\n");
-         exit(EXIT_FAILURE);
+         printf("Main Boot and Backup Boot are not the same.\nstat = 1\n");
       }
-      
-      // Call the verify function (to be implemented in a later iteration)
    }
    else if(arguments.flags[3] == true)
    {
-      printf("Directory function has not been implemented yet\n");
+      printf("Print directory function has not been implemented yet\n");
       // Call the directory function (to be implemented in a later iteration)
    }
    else
@@ -51,9 +49,5 @@ int main(int argc, char *argv[])
              "Try \'./extfat -h\' for more information\n");
       return EXIT_FAILURE;
    }
-   /*
-   free(A);
-   free(B);
-   */
    return EXIT_SUCCESS;
 }

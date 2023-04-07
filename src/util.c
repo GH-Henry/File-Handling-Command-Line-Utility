@@ -39,33 +39,38 @@ fileInfo initFileInfoStruct(char *fileName)
       perror("stat of file:");
       exit(0);
    }
-   file.size = statbuf.st_size; // add size to the thing
+
    
-   file.mainBoot = (Main_Boot *)mmap(  NULL,
-                                       file.size,
-                                       PROT_READ,
-                                       MAP_PRIVATE,
-                                       file.fd,
-                                       0); // note the offset
-    
-   if (file.fd == -1)
+   file.size = statbuf.st_size; // add size to the thing
+
+   void *fp = (void *)mmap(NULL,
+                           file.size,
+                           PROT_READ,
+                           MAP_PRIVATE,
+                           file.fd,
+                           0); // note the offset
+
+   if (fp == (void *)-1)
    {
       perror("mmap:");
       exit(0);
    }
 
-   int bytesPerSector = 2 << (file.mainBoot->BytesPerSectorShift - 1); // Can be added to a property of the struct
+   // first, is the Main Boot record
+   Main_Boot *MB = (Main_Boot *)fp;
+   file.mainBoot = MB;
 
-   void* fd_ptr = (void*)(intptr_t)file.fd;
-   file.backupBoot = (Main_Boot *)((char*)fd_ptr + 12 * bytesPerSector);
-   file.FAT = (uint32_t *)(((char*)fd_ptr) + (file.mainBoot->FatOffset * bytesPerSector));
+   int bytesPerSector = 2 << (file.mainBoot->BytesPerSectorShift - 1); // Can be added to a property of the struct
+   
+   void *fp_ptr = (void*)(intptr_t)fp;
+   file.backupBoot = (Main_Boot *)(fp_ptr + 12 * bytesPerSector);
+   file.FAT = (uint32_t *)(fp_ptr + (file.mainBoot->FatOffset * bytesPerSector));
 
    return file;
 }
 
 int verifyBoot(Main_Boot *A, Main_Boot *B)
 {
-   //BootCode usually different
    if(A->BootCode != B->BootCode)
       return 1;
    if(A->BootSignature != B->BootSignature)

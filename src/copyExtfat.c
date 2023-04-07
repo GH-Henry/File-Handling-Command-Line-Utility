@@ -1,11 +1,13 @@
 #include "copyExtfat.h"
 #include "extfat.h"
+#include "util.h"
 
 void mmapCopy(char *input_file, char *output_file)
 {
-      int fd = open(input_file, O_RDWR);
+   fileInfo A = initFileInfoStruct(input_file);
+   A.fd = open(input_file, O_RDWR);
       
-   if (fd == -1)
+   if (A.fd == -1)
    {
       perror("file open ");
       exit(0);
@@ -17,7 +19,7 @@ void mmapCopy(char *input_file, char *output_file)
                                      sizeof(Main_Boot),
                                      PROT_READ,
                                      MAP_PRIVATE,
-                                     fd,
+                                     A.fd,
                                      0); // note the offset
 
    if (MB == (Main_Boot *)-1)
@@ -29,13 +31,13 @@ void mmapCopy(char *input_file, char *output_file)
    // below is change made in main
    struct stat statbuf;
 
-   if (fstat(fd, &statbuf) < 0)
+   if (fstat(A.fd, &statbuf) < 0)
    {
       perror("fstat");
       exit(1);
    }
 
-   if (mapOutput(fd, statbuf.st_size, output_file) != -1)
+   if (mapOutput(A.fd, statbuf.st_size, output_file) != -1)
    {
       printf("Copied Succesfully!\n");
    }
@@ -48,13 +50,11 @@ void mmapCopy(char *input_file, char *output_file)
       exit(0);
    }
    // close the file
-   if (close(fd))
+   if (close(A.fd))
    {
       perror("closeStat:");
    }
-   fd = 0;
-
-   
+   A.fd = 0;
 }
 
 
