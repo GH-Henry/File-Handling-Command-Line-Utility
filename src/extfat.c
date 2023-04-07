@@ -29,8 +29,6 @@ int main(int argc, char *argv[])
    else if(arguments.flags[2] == true)
    {
       int stat = verifyBoot(A.mainBoot, A.backupBoot);
-      printf("BootCode 1: %d\n", A.mainBoot->ClusterCount);
-      printf("BootCode 2: %d\n", A.backupBoot->ClusterCount);
       if(stat == 0)
          printf("Main Boot and Backup Boot are the same.\nstat = 0\n");
       else
