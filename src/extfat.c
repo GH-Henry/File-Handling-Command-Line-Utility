@@ -1,15 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
 
+#include "extfat.h"
 #include "parseArgs.h"
 #include "copyExtfat.h"
-#include "extfat.h"
+#include "directoryExtfat.h"
 #include "util.h"
 
 int main(int argc, char *argv[])
 {
    argument_struct_t arguments = parseArgs(argc, argv);
-   if(arguments.inFile == NULL && arguments.flags[0] == false)
+   if(arguments.inFile == NULL && arguments.flags[help] == false)
    {
       printf("Error: missing \'-i inputFile\'\n"
              "Try \'./extfat -h\' for more information\n");
@@ -38,14 +44,16 @@ int main(int argc, char *argv[])
    }
    else if(arguments.flags[printDirectory] == true)
    {
-      printf("Print directory function has not been implemented yet\n");
-      // Call the directory function (to be implemented in a later iteration)
+      printAllDirectoriesAndFiles(inputFileInfo.mainBoot);
    }
    else
    {
       printf("Unknown option\n"
              "Try \'./extfat -h\' for more information\n");
+      freeFileInfoStruct(&inputFileInfo);
       return EXIT_FAILURE;
    }
+
+   freeFileInfoStruct(&inputFileInfo);
    return EXIT_SUCCESS;
 }

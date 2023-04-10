@@ -19,7 +19,7 @@ CINCS=-I./include
 all:mmap fread unit_tests extfat crc_example
 
 # the utility that is a focus of this project
-extfat:src/extfat.c common/routines.c src/parseArgs.c src/copyExtfat.c src/util.c
+extfat:src/extfat.c common/routines.c src/parseArgs.c src/copyExtfat.c src/util.c src/directoryExtfat.c
 	${CC} ${CFLAGS} ${CINCS} -o $@ $^
 
 
@@ -29,13 +29,13 @@ unit_tests: munit_example
 # this test needs to be deleted once we get some real tests
 # for the problem at hand
 munit_example:unit_tests/munit/example.c
-	${CC} ${CFLAGS}  unit_tests/munit/munit.c -I./unit_tests/munit/ ${CINCS} -o $@ $^
+	${CC} ${CFLAGS} unit_tests/munit/munit.c -I./unit_tests/munit/ ${CINCS} -o $@ $^
 
 # requirements tests
 
 
 # example code
-mmap:examples/mmap.c  
+mmap:examples/mmap.c  common/routines.c
 	${CC} ${CFLAGS} ${CINCS} -o $@ $^
 
 fread:examples/fread.c  

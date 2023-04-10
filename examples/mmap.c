@@ -1,4 +1,47 @@
+ /*
+
+   This is an example of using mmap to read an extFAT image file.
+
+   To make the sample file:
+
+    % # create the file system image
+    % dd if=/dev/zero of=test.image count=1 bs=1G
+    % sudo losetup /dev/loop2 test.image
+    % sudo /usr/sbin/mkexfatfs /dev/loop2
+
+    % # put something in the file system image
+    % mkdir /tmp/d
+    % sudo mount /dev/loop2 /tmp/d
+    % cp examples/mmap.c /tmp/d
+
+    % # clean up
+    % sudo umount /tmp/d
+    % sudo losetup -d /dev/loop2
+    % rm -rf /tmp/d
+    % rm test.image
+
+
+
+   Written by Bud Davis, jimmie.davis@uta.edu
+   (c) 2023, All Rights Reserved
+   Provided to students of CSE3310, UTA. Any use
+   other than this course is prohibited.
+
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/mman.h>
+#include <stddef.h>
+#include <stdint.h>
+
 #include "extfat.h"
+#include "routines.h"
 
 // given a number N, this macro returns a pointer in the mmapped file
 #define cluster(N) ((fp + MB->ClusterHeapOffset * bytesPerSector) + ((N - 2) * bytesPerSector * sectorsPerCluster))
@@ -59,6 +102,11 @@ int main()
    Main_Boot *BBR = (Main_Boot *)(fp + 12 * bytesPerSector);
    printf("BackUpBootRecord %p\n", BBR);
    printf("FileSystemName %s\n", BBR->FileSystemName); // warning, not required to be terminated
+
+   // Checksum
+   uint32_t mbrChecksum = BootChecksum((uint8_t*) MB, (short) bytesPerSector);
+   uint32_t bbrChecksum = BootChecksum((uint8_t*) BBR, (short) bytesPerSector);
+   printf("Checksum  (MB) %x (BBR) %x\n",mbrChecksum,bbrChecksum);
 
    // FAT 1 and FAT 2
    // (sometimes there is no FAT2)
@@ -134,60 +182,42 @@ int main()
    printf("FirstClusterofRootDirectory %d\n", MB->FirstClusterOfRootDirectory);
 
    printf("The directory listing\n");
-   //printf("the cluster count is %x\n", MB->ClusterCount);
-   //This program now deals with both filenames and directories!!!
-   int num_cluster=MB->ClusterCount;
-   int isitasub[num_cluster];
-   int count_of_sub=-1;
-
-   for (int i=0;i < num_cluster;i++)
+   // The directory listings are complicated.  This code just extracts the file names.
+   // it does not handle directories.
+   int i = 0;
+   while (GDS[i].EntryType)
    {
-      isitasub[i]=0;
-   }
-   for (int w=5; w < num_cluster; w++)
-   {
-      if (w == 5 || isitasub[w] ==1)
+      // printf("%8lx\tThe Entry Type is %x  \tDataLength %8ld \tFirstCluster %d ", (void *)&GDS[i] - fp, GDS[i].EntryType, GDS[i].DataLength, GDS[i].FirstCluster);
+      if (GDS[i].InUse && GDS[i].EntryType == 0xc1)
       {
-         count_of_sub++;
-         GDS = cluster(w);
-         int i = 0; 
+         // This is a temporary structure
+         // Needs to be 'well defined' like the generic one, above
          struct x
          {
             uint8_t EntryType : 8;
             uint8_t GeneralSecondaryFlags : 8;
             uint8_t FileName[30];
          };
-         while (GDS[i].EntryType)
-        {
-             if (GDS[i].InUse && GDS[i].EntryType == 0xc1)
-             {
-                 struct x *X = (struct x *)&GDS[i];
-                 if (X->EntryType == 0xc1)
-                 {
-                     char *ch = (char*) X->FileName;
-                      for(int j=0; j<=count_of_sub;j++)
-                      {
-                         printf("\t");
-                      }
-                     while (*ch)
-                     {
-                         printf("%c", *ch);
-                           // go to the next, and skip one
-                        ch++;
-                        ch++;
-                     }
-                     printf("\n");
-                 }
-             }
-            if(GDS[i].EntryType == 0xc0 && GDS[i].CustomDefined[8]==0x10)
-            {
-               isitasub[GDS[i].FirstCluster]=1;
-               //printf("the sub is %d\n", GDS[i].FirstCluster);     
-            }
-          i++;
-      }
-   }
 
+         struct x *X = (struct x *)&GDS[i];
+         if (X->EntryType == 0xc1)
+         {
+            char *ch = (char*) X->FileName;
+            printf("\t");
+            while (*ch)
+            {
+               printf("%c", *ch);
+               // go to the next, and skip one
+               ch++;
+               ch++;
+            }
+            printf("\n");
+            // eat the next 2 directory entries
+            i++;
+            i++;
+         }
+      }
+      i++;
    }
 
    // unmap the file

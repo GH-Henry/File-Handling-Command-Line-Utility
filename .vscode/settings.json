@@ -22,6 +22,7 @@
         "string_view": "c",
         "initializer_list": "c",
         "utility": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "routines.h": "c"
     }
 }

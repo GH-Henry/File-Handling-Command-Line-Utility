@@ -24,7 +24,7 @@ argument_struct_t parseArgs(int argc, char *argv[])
 {
    argument_struct_t argStruct = {};
    int opt = 0;
-   while((opt = getopt(argc, argv, "i:o:chvp")) != -1)
+   while((opt = getopt(argc, argv, "i:o:chvd")) != -1)
    {
       switch(opt)
       {
@@ -39,19 +39,18 @@ argument_struct_t parseArgs(int argc, char *argv[])
             break;
          case 'h':
             //help
-            argStruct.flags[0] = true;
+            argStruct.flags[help] = true;
             break;
          case 'c':
             //copy
-            argStruct.flags[1] = true;
+            argStruct.flags[copy] = true;
             break;
          case 'v':
             //verify
-            argStruct.flags[2] = true;
+            argStruct.flags[verify] = true;
             break;
          case 'd':
-            //print directory
-            argStruct.flags[3] = true;
+            argStruct.flags[printDirectory] = true;
             break;
          case '?':
             if(optopt == 'o')

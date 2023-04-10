@@ -69,51 +69,51 @@ fileInfo initFileInfoStruct(char *fileName)
    return file;
 }
 
-int verifyBoot(Main_Boot *A, Main_Boot *B)
+int verifyBoot(Main_Boot *MB, Main_Boot *BB)
 {
-   if(A->BootCode != B->BootCode)
+   if(MB->BootCode != BB->BootCode)
       return 1;
-   if(A->BootSignature != B->BootSignature)
+   if(MB->BootSignature != BB->BootSignature)
       return 1;
-   if(A->BytesPerSectorShift != B->BytesPerSectorShift)
+   if(MB->BytesPerSectorShift != BB->BytesPerSectorShift)
       return 1;
-   if(A->ClusterCount != B->ClusterCount)
+   if(MB->ClusterCount != BB->ClusterCount)
       return 1;
-   if(A->ClusterHeapOffset != B->ClusterHeapOffset)
+   if(MB->ClusterHeapOffset != BB->ClusterHeapOffset)
       return 1;
-   if(A->DriveSelect != B->DriveSelect)
+   if(MB->DriveSelect != BB->DriveSelect)
       return 1;
-   if(A->ExcessSpace != B->ExcessSpace)
+   if(MB->ExcessSpace != BB->ExcessSpace)
       return 1;
-   if(A->FatLength != B->FatLength)
+   if(MB->FatLength != BB->FatLength)
       return 1;
-   if(A->FatOffset != B->FatOffset)
+   if(MB->FatOffset != BB->FatOffset)
       return 1;
-   if(A->FileSystemName != B->FileSystemName)
+   if(MB->FileSystemName != BB->FileSystemName)
       return 1;
-   if(A->FileSystemRevision != B->FileSystemRevision)
+   if(MB->FileSystemRevision != BB->FileSystemRevision)
       return 1;
-   if(A->FirstClusterOfRootDirectory != B->FirstClusterOfRootDirectory)
+   if(MB->FirstClusterOfRootDirectory != BB->FirstClusterOfRootDirectory)
       return 1;
-   if(A->JumpBoot != B->JumpBoot)
+   if(MB->JumpBoot != BB->JumpBoot)
       return 1;
-   if(A->MustBeZero != B->MustBeZero)
+   if(MB->MustBeZero != BB->MustBeZero)
       return 1;
-   if(A->NumberOfFats != B->NumberOfFats)
+   if(MB->NumberOfFats != BB->NumberOfFats)
       return 1;
-   if(A->PartitionOffset != B->PartitionOffset)
+   if(MB->PartitionOffset != BB->PartitionOffset)
       return 1;
-   if(A->PercentInUse != B->PercentInUse)
+   if(MB->PercentInUse != BB->PercentInUse)
       return 1;
-   if(A->Reserved != B->Reserved)
+   if(MB->Reserved != BB->Reserved)
       return 1;
-   if(A->SectorsPerClusterShift != B->SectorsPerClusterShift)
+   if(MB->SectorsPerClusterShift != BB->SectorsPerClusterShift)
       return 1;
-   if(A->VolumeFlags != B->VolumeFlags)
+   if(MB->VolumeFlags != BB->VolumeFlags)
       return 1;
-   if(A->VolumeLength != B->VolumeLength)
+   if(MB->VolumeLength != BB->VolumeLength)
       return 1;
-   if(A->VolumeSerialNumber != B->VolumeSerialNumber)
+   if(MB->VolumeSerialNumber != BB->VolumeSerialNumber)
       return 1;
 
    return 0;
