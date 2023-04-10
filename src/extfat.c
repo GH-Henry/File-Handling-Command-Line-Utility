@@ -15,7 +15,12 @@
 int main(int argc, char *argv[])
 {
    argument_struct_t arguments = parseArgs(argc, argv);
-   if(arguments.inFile == NULL && arguments.flags[help] == false)
+   if(arguments.flags[help] == true)
+   {
+      printHelp();
+      return EXIT_SUCCESS;
+   }
+   else if(arguments.inFile == NULL)
    {
       printf("Error: missing \'-i inputFile\'\n"
              "Try \'./extfat -h\' for more information\n");
@@ -23,12 +28,8 @@ int main(int argc, char *argv[])
    }
 
    fileInfo inputFileInfo = initFileInfoStruct(arguments.inFile);
-
-   if(arguments.flags[help] == true)
-   {
-      printHelp();
-   }
-   else if(arguments.flags[copy] == true)
+   
+   if(arguments.flags[copy] == true)
    {
       mmapCopy(arguments.inFile, arguments.outFile);
    }
