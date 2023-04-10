@@ -39,6 +39,7 @@
 #include <sys/mman.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdint.h>
 
 #include "extfat.h"
 #include "routines.h"
@@ -74,12 +75,35 @@ int main()
                            MAP_PRIVATE,
                            fd,
                            0); // note the offset
+   off_t size = 0;
+   struct stat statbuf;
+   if (fstat(fd, &statbuf))
+   {
+      perror("stat of file:");
+      exit(0);
+   }
+   size = statbuf.st_size;
+   printf("The file size is %ld\n", size);
 
+   // mmap the entire file into memory
+   // every data item we reference, will be relative to fp...
+   void *fp = (void *)mmap(NULL,
+                           size,
+                           PROT_READ,
+                           MAP_PRIVATE,
+                           fd,
+                           0); // note the offset
+
+   if (fp == (void *)-1)
    if (fp == (void *)-1)
    {
       perror("mmap:");
+      perror("mmap:");
       exit(0);
    }
+
+   // first, is the Main Boot record
+   Main_Boot *MB = (Main_Boot *)fp;
 
    // first, is the Main Boot record
    Main_Boot *MB = (Main_Boot *)fp;
@@ -113,6 +137,72 @@ int main()
    printf("NumberOfFats %d\n", MB->NumberOfFats);
    printf("FatOffset %d\n", MB->FatOffset); // in sectors
    printf("FatLength %d\n", MB->FatLength);
+   uint32_t *FAT = (uint32_t *)((void *)fp + (MB->FatOffset * bytesPerSector));
+   printf("FAT[0] is at absolute %p relative %8x\n", FAT, MB->FatOffset * bytesPerSector);
+   printf("FAT[1] is at absolute %p \n", &FAT[1]);
+
+   // array notation is used to access.
+   printf("  %x %x \n", FAT[0], FAT[1]);
+   printf("  %x %x \n", FAT[2], FAT[3]);
+   printf("  %x %x \n", FAT[4], FAT[5]);
+
+   // defined as always these values
+   assert(FAT[0] == 0xfffffff8);
+   assert(FAT[1] == 0xffffffff);
+
+   printf("FAT chains\n");
+   for (int i = 2; i < MB->ClusterCount - 1; i++)
+   {
+      switch (FAT[i])
+      {
+      case 0x00000000:
+         break;
+      case 0xfffffff7:
+         printf("BAD");
+         break;
+      case 0xffffffff:
+         // end of chain
+         printf("\n");
+         break;
+      default:
+         printf(" %d", FAT[i]);
+         break;
+      }
+   }
+   printf("end of FAT\n");
+
+   // clusters
+   //     (cluster(2) is the first one)
+   printf("cluster  2 heap starts at %p relative %lx\n", cluster(2), cluster(2) - fp);
+   printf("cluster  3 heap starts at %p relative %lx\n", cluster(3), cluster(3) - fp);
+   printf("cluster  4 heap starts at %p relative %lx\n", cluster(4), cluster(4) - fp);
+   printf("cluster  5 heap starts at %p relative %lx\n", cluster(5), cluster(5) - fp);
+   printf("cluster  6 heap starts at %p relative %lx\n", cluster(6), cluster(6) - fp);
+   printf("cluster  7 heap starts at %p relative %lx\n", cluster(7), cluster(7) - fp);
+
+   typedef struct
+   {
+      union
+      {
+         uint8_t EntryType;
+         struct
+         {
+            uint8_t TypeCode : 5;
+            uint8_t TypeImportance : 1;
+            uint8_t TypeCategory : 1;
+            uint8_t InUse : 1;
+         };
+      };
+      uint8_t CustomDefined[19];
+      uint32_t FirstCluster;
+      uint64_t DataLength;
+   } GenericDirectoryStruct;
+
+   printf("The size of GenericDirectoryStruct %ld %lx\n", sizeof(GenericDirectoryStruct), sizeof(GenericDirectoryStruct));
+   assert(sizeof(GenericDirectoryStruct) == 32);
+
+   // directory
+   GenericDirectoryStruct *GDS = cluster(MB->FirstClusterOfRootDirectory);
    uint32_t *FAT = (uint32_t *)((void *)fp + (MB->FatOffset * bytesPerSector));
    printf("FAT[0] is at absolute %p relative %8x\n", FAT, MB->FatOffset * bytesPerSector);
    printf("FAT[1] is at absolute %p \n", &FAT[1]);
@@ -222,6 +312,7 @@ int main()
 
    // unmap the file
    if (munmap(fp, size))
+   if (munmap(fp, size))
    {
       perror("error from unmap:");
       exit(0);
@@ -230,6 +321,7 @@ int main()
    // close the file
    if (close(fd))
    {
+      perror("close:");
       perror("close:");
    }
    fd = 0;
