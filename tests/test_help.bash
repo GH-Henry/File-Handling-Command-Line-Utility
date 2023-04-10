@@ -18,6 +18,9 @@ Copy file:
 Verify file:
 \"-v\"
 
+Print directory:
+\"-d\"
+
 Input file (required):
 \"-i fileName\"
 
