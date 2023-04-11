@@ -40,7 +40,6 @@ fileInfo initFileInfoStruct(char *fileName)
       exit(0);
    }
 
-   
    file.size = statbuf.st_size; // add size to the thing
 
    void *fp = (void *)mmap(NULL,
@@ -65,6 +64,7 @@ fileInfo initFileInfoStruct(char *fileName)
    void *fp_ptr = (void*)(intptr_t)fp;
    file.backupBoot = (Main_Boot *)(fp_ptr + 12 * bytesPerSector);
    file.FAT = (uint32_t *)(fp_ptr + (file.mainBoot->FatOffset * bytesPerSector));
+   file.fileName = fileName;
 
    return file;
 }

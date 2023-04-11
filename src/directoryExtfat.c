@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <sys/types.h>
@@ -136,6 +135,5 @@ void printAllDirectoriesAndFiles(void *fp)
     GenericDirectoryStruct *GDS = FIND_CLUSTER(MB->FirstClusterOfRootDirectory, fp, MB->ClusterHeapOffset,
                                                bytesPerSector, sectorsPerCluster);
 
-    printf("The directory listing\n");
     printDirectory(GDS, fp, MB->ClusterHeapOffset, bytesPerSector, sectorsPerCluster, 1);
 }

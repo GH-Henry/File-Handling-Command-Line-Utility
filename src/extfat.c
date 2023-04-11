@@ -31,13 +31,18 @@ int main(int argc, char *argv[])
    
    if(arguments.flags[copy] == true)
    {
-      mmapCopy(arguments.inFile, arguments.outFile);
+      if( mmapCopy(&inputFileInfo, arguments.outFile) != -1 )
+      {
+         printf("Copied Succesfully!\n");
+      }
    }
    else if(arguments.flags[verify] == true)
    {
       int stat = verifyBoot(inputFileInfo.mainBoot, inputFileInfo.backupBoot);
       if(stat == 0)
+      {
          printf("Main Boot and Backup Boot are the same.\nstat = 0\n");
+      }
       else
       {
          printf("Main Boot and Backup Boot are not the same.\nstat = 1\n");
@@ -45,6 +50,7 @@ int main(int argc, char *argv[])
    }
    else if(arguments.flags[printDirectory] == true)
    {
+      printf("The directory listing\n");
       printAllDirectoriesAndFiles(inputFileInfo.mainBoot);
    }
    else
