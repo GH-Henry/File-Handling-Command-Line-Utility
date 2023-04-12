@@ -8,7 +8,7 @@
 
 void freeFileInfoStruct(fileInfo *file)
 {
-// unmap the file
+   // unmap the file
    if (munmap(file->mainBoot, file->size))
    {
       perror("error from unmap:");
@@ -63,58 +63,17 @@ fileInfo initFileInfoStruct(char *fileName)
    
    void *fp_ptr = (void*)(intptr_t)fp;
    file.backupBoot = (Main_Boot *)(fp_ptr + 12 * bytesPerSector);
+   file.SectorSize = bytesPerSector;
    file.FAT = (uint32_t *)(fp_ptr + (file.mainBoot->FatOffset * bytesPerSector));
    file.fileName = fileName;
 
    return file;
 }
 
-int verifyBoot(Main_Boot *MB, Main_Boot *BB)
+int verifyBoot(fileInfo *file)
 {
-   if(MB->BootCode != BB->BootCode)
-      return 1;
-   if(MB->BootSignature != BB->BootSignature)
-      return 1;
-   if(MB->BytesPerSectorShift != BB->BytesPerSectorShift)
-      return 1;
-   if(MB->ClusterCount != BB->ClusterCount)
-      return 1;
-   if(MB->ClusterHeapOffset != BB->ClusterHeapOffset)
-      return 1;
-   if(MB->DriveSelect != BB->DriveSelect)
-      return 1;
-   if(MB->ExcessSpace != BB->ExcessSpace)
-      return 1;
-   if(MB->FatLength != BB->FatLength)
-      return 1;
-   if(MB->FatOffset != BB->FatOffset)
-      return 1;
-   if(MB->FileSystemName != BB->FileSystemName)
-      return 1;
-   if(MB->FileSystemRevision != BB->FileSystemRevision)
-      return 1;
-   if(MB->FirstClusterOfRootDirectory != BB->FirstClusterOfRootDirectory)
-      return 1;
-   if(MB->JumpBoot != BB->JumpBoot)
-      return 1;
-   if(MB->MustBeZero != BB->MustBeZero)
-      return 1;
-   if(MB->NumberOfFats != BB->NumberOfFats)
-      return 1;
-   if(MB->PartitionOffset != BB->PartitionOffset)
-      return 1;
-   if(MB->PercentInUse != BB->PercentInUse)
-      return 1;
-   if(MB->Reserved != BB->Reserved)
-      return 1;
-   if(MB->SectorsPerClusterShift != BB->SectorsPerClusterShift)
-      return 1;
-   if(MB->VolumeFlags != BB->VolumeFlags)
-      return 1;
-   if(MB->VolumeLength != BB->VolumeLength)
-      return 1;
-   if(MB->VolumeSerialNumber != BB->VolumeSerialNumber)
-      return 1;
-
-   return 0;
+   uint32_t mbrChecksum = BootChecksum((uint8_t*) file->mainBoot, (short) file->SectorSize);
+   uint32_t bbrChecksum = BootChecksum((uint8_t*) file->backupBoot, (short) file->SectorSize);
+   
+   return mbrChecksum == bbrChecksum;
 }

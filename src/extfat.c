@@ -31,14 +31,13 @@ int main(int argc, char *argv[])
 
    if(arguments.flags[verify] == true)
    {
-      int stat = verifyBoot(inputFileInfo.mainBoot, inputFileInfo.backupBoot);
-      if(stat == 0)
+      if(verifyBoot(&inputFileInfo) == 1)
       {
-         printf("Main Boot and Backup Boot are the same.\nstat = 0\n");
+         printf("Main Boot and Backup Boot checksums are the same.\n");
       }
       else
       {
-         printf("Main Boot and Backup Boot are not the same.\nstat = 1\n");
+         printf("Main Boot and Backup Boot checksums are not the same.\n");
       }
    }
 
