@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
 
    if(arguments.flags[verify] == true)
    {
+      printf("\n=== Verifying the checksums of %s ===\n", inputFileInfo.fileName);
       if(verifyBoot(&inputFileInfo) == 1)
       {
          printf("Main Boot and Backup Boot checksums are the same.\n");
@@ -43,6 +44,7 @@ int main(int argc, char *argv[])
 
    if(arguments.flags[copy] == true)
    {
+      printf("\n=== Copying %s to %s ===\n", inputFileInfo.fileName, arguments.outFile);
       if( mmapCopy(&inputFileInfo, arguments.outFile) != -1 )
       {
          printf("Copied Succesfully!\n");
@@ -51,10 +53,11 @@ int main(int argc, char *argv[])
    
    if(arguments.flags[printDirectory] == true)
    {
-      printf("The directory listing\n");
+      printf("\n=== Printing the directory listing of %s ===\n", inputFileInfo.fileName);
       printAllDirectoriesAndFiles(inputFileInfo.mainBoot);
    }
 
+   printf("\n");
    freeFileInfoStruct(&inputFileInfo);
    return EXIT_SUCCESS;
 }
