@@ -18,7 +18,7 @@ void freeFileInfoStruct(fileInfo *file)
    // close the file
    if (close(file->fd))
    {
-      perror("close:");
+      perror("close");
    }
    file->fd = 0;
 }
@@ -29,14 +29,14 @@ fileInfo initFileInfoStruct(char *fileName)
    file.fd = open(fileName, O_RDWR);
    if (file.fd == -1)
    {
-      perror("file open: ");
+      perror("file open");
       exit(0);
    }
 
    struct stat statbuf;
    if (fstat(file.fd, &statbuf))
    {
-      perror("stat of file:");
+      perror("stat of file");
       exit(0);
    }
 
@@ -51,7 +51,7 @@ fileInfo initFileInfoStruct(char *fileName)
 
    if (fp == (void *)-1)
    {
-      perror("mmap:");
+      perror("mmap");
       exit(0);
    }
 

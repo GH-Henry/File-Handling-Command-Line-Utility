@@ -78,7 +78,7 @@ int mmapCopy(fileInfo *inputFileInfo, char *outputFilename) // Function that map
 
    if (close(fout))
    {
-      perror("Close :");
+      perror("Close");
    }
 
    return 0;

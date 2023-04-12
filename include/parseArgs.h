@@ -15,7 +15,7 @@ typedef struct
 {
     char *inFile;
     char *outFile;
-    bool flags[4];
+    bool flags[NUM_FLAGS];
 } argument_struct_t;
 
 void printHelp();
