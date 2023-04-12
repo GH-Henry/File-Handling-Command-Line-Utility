@@ -28,15 +28,8 @@ int main(int argc, char *argv[])
    }
 
    fileInfo inputFileInfo = initFileInfoStruct(arguments.inFile);
-   
-   if(arguments.flags[copy] == true)
-   {
-      if( mmapCopy(&inputFileInfo, arguments.outFile) != -1 )
-      {
-         printf("Copied Succesfully!\n");
-      }
-   }
-   else if(arguments.flags[verify] == true)
+
+   if(arguments.flags[verify] == true)
    {
       int stat = verifyBoot(inputFileInfo.mainBoot, inputFileInfo.backupBoot);
       if(stat == 0)
@@ -48,17 +41,19 @@ int main(int argc, char *argv[])
          printf("Main Boot and Backup Boot are not the same.\nstat = 1\n");
       }
    }
-   else if(arguments.flags[printDirectory] == true)
+
+   if(arguments.flags[copy] == true)
+   {
+      if( mmapCopy(&inputFileInfo, arguments.outFile) != -1 )
+      {
+         printf("Copied Succesfully!\n");
+      }
+   }
+   
+   if(arguments.flags[printDirectory] == true)
    {
       printf("The directory listing\n");
       printAllDirectoriesAndFiles(inputFileInfo.mainBoot);
-   }
-   else
-   {
-      printf("Unknown option\n"
-             "Try \'./extfat -h\' for more information\n");
-      freeFileInfoStruct(&inputFileInfo);
-      return EXIT_FAILURE;
    }
 
    freeFileInfoStruct(&inputFileInfo);

@@ -11,3 +11,4 @@ sudo /usr/sbin/mkexfatfs /dev/loop2
 mkdir /tmp/d
 sudo mount /dev/loop2 /tmp/d
 cp examples/mmap.c /tmp/d
+sync
