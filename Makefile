@@ -59,6 +59,8 @@ test_verify: extfat
 test_MultipleFlags: extfat 
 	bash tests/test_MultipleFlags.bash
 
+test_NoCopyDest: extfat 
+	bash tests/test_NoCopyDest.bash
 # example code
 mmap:examples/mmap.c  common/routines.c
 	${CC} ${CFLAGS} ${CINCS} -o $@ $^
