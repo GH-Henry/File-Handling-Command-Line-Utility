@@ -4,7 +4,7 @@ echo "Directory Test"
 
 # Create a disk image
 
-# Display the directory tree of the disk image
+# Display the directory of the disk image
 
 sudo umount /tmp/d
 rm -rf /tmp/d

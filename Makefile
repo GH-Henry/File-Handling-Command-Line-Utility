@@ -56,6 +56,9 @@ test_PrintDirectory: extfat
 test_verify: extfat
 	bash tests/test_verify.bash
 
+test_MultipleFlags: extfat 
+	bash tests/test_MultipleFlags.bash
+
 # example code
 mmap:examples/mmap.c  common/routines.c
 	${CC} ${CFLAGS} ${CINCS} -o $@ $^
