@@ -50,8 +50,11 @@ test_help: extfat
 test_input_message: extfat 
 	bash tests/test_input_message.bash
 
-test_invalid_command: extfat 
-	bash tests/test_invalid_command.bash
+test_PrintDirectory: extfat
+	bash tests/test_PrintDirectory.bash
+
+test_verify: extfat
+	bash tests/test_verify.bash
 
 # example code
 mmap:examples/mmap.c  common/routines.c
