@@ -33,5 +33,5 @@ if [[ $output == "$helpMessage" ]]; then
 else
     result=1
 fi
-
+echo "Result is $result "
 exit $result

@@ -10,5 +10,5 @@ if [[ $output == *"$errorMessage"* ]]; then
 else
     result=1
 fi
-
+echo "Result is $result "
 exit $result

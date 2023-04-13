@@ -33,7 +33,25 @@ munit_example:unit_tests/munit/example.c
 
 # requirements tests
 system_tests: extfat
-	bash tests/grading_test.bash
+	bash tests/system_tests.bash
+
+test_CheckOutputExists: extfat 
+	bash tests/test_CheckOutputExists.bash
+
+test_copy: extfat 
+	bash tests/test_copy.bash 
+
+test_ExitAfterHelp: extfat
+	bash tests/test_ExitAfterHelp.bash
+
+test_help: extfat
+	bash tests/test_help.bash
+
+test_input_message: extfat 
+	bash tests/test_input_message.bash
+
+test_invalid_command: extfat 
+	bash tests/test_invalid_command.bash
 
 # example code
 mmap:examples/mmap.c  common/routines.c

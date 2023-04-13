@@ -11,4 +11,5 @@ else
     result=1
 fi
 rm destination.image
+echo "Result is $result "
 exit $result

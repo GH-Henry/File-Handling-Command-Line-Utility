@@ -17,4 +17,5 @@ if [ "${result1[0]}" = "${result2[0]}" ]; then
 else
     result=1
 fi
+echo "Result is $result "
 exit $result

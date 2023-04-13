@@ -9,4 +9,5 @@ if [ $? -eq 0 ]; then
 else 
     result=1;
 fi
+echo "Result is $result "
 exit $result

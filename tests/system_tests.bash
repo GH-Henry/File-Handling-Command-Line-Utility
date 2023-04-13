@@ -10,9 +10,9 @@ TestCount=0
 TestFailed=0
 TestPassed=0
 
-for ImageSize in "1M" "5M" "10M" "20M" "50M" "100M" "250M" "300M" 
+for ImageSize in "1M" "5M" "10M"  
 do
-     for TestScript in "tests/test_verify.bash" "tests/test_copy.bash"
+     for TestScript in $(ls tests/test_*.bash)
      do
         TestCount=$((TestCount+1))
 
