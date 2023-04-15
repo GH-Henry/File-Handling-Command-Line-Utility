@@ -19,7 +19,7 @@ CINCS=-I./include
 all:mmap fread unit_tests extfat crc_example
 
 # the utility that is a focus of this project
-extfat:src/extfat.c common/routines.c src/parseArgs.c src/copyExtfat.c src/util.c src/directoryExtfat.c
+extfat:src/extfat.c common/routines.c src/parseArgs.c src/copyExtfat.c src/util.c src/printExtfatDir.c
 	${CC} ${CFLAGS} ${CINCS} -o $@ $^
 
 
