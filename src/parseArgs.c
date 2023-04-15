@@ -38,15 +38,12 @@ argument_struct_t parseArgs(int argc, char *argv[])
                argStruct.outFile = argStruct.inFile;
             break;
          case 'h':
-            //help
             argStruct.flags[help] = true;
             break;
          case 'c':
-            //copy
             argStruct.flags[copy] = true;
             break;
          case 'v':
-            //verify
             argStruct.flags[verify] = true;
             break;
          case 'd':

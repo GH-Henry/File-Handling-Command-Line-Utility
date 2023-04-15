@@ -34,7 +34,7 @@ union                               \
 typedef struct GenericDirectoryStruct
 {
     __UNION_ENTRY_TYPE__;
-    uint8_t CustomDefined[19];
+    uint8_t  CustomDefined[19];
     uint32_t FirstCluster;
     uint64_t DataLength;
 } GenericDirectoryStruct;
