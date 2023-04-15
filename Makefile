@@ -14,12 +14,14 @@ CFLAGS=-Wall -Wextra -O0 -std=c17 -g3 -fsanitize=address -fsanitize=bounds-stric
 # note address sanitizer "-fsanitize=address" is new. it can be
 # removed from the makefile if it causes problems.
 
+CSRCS=${wildcard src/*.c}
+
 CINCS=-I./include
 
 all:mmap fread unit_tests extfat crc_example
 
 # the utility that is a focus of this project
-extfat:src/extfat.c common/routines.c src/parseArgs.c src/copyExtfat.c src/util.c src/printExtfatDir.c
+extfat:${CSRCS} common/routines.c
 	${CC} ${CFLAGS} ${CINCS} -o $@ $^
 
 
