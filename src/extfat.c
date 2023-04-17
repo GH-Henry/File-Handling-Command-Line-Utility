@@ -29,6 +29,14 @@ int main(int argc, char *argv[])
 
    fileInfo inputFileInfo = initFileInfoStruct(arguments.inFile);
 
+// DEBUG INFO... To Delete
+   // printf("%s %s %s\n", arguments.inFile, arguments.outFile, arguments.delFile);
+   // for(int i = 0; i < NUM_FLAGS; i++)
+   // {
+   //    printf("%d ", arguments.flags[i]);
+   // }
+   // printf("\n");
+
    if(arguments.flags[verify] == true)
    {
       printf("\n=== Verifying the checksums of %s ===\n", inputFileInfo.fileName);
@@ -42,7 +50,19 @@ int main(int argc, char *argv[])
       }
    }
 
-   if(arguments.flags[copy] == true)
+   if(arguments.flags[deleteFile] == true)
+   {
+      if(arguments.delFile != NULL)
+      {
+         printf("\n=== Deleting %s from %s ===\n", arguments.delFile, inputFileInfo.fileName);
+      }
+      else
+      {
+         printf("\n=== Missing target file to delete in %s ===\n", inputFileInfo.fileName);
+      }
+   }
+
+   if(arguments.flags[copy] == true && arguments.outFile != NULL)
    {
       printf("\n=== Copying %s to %s ===\n", inputFileInfo.fileName, arguments.outFile);
       if( mmapCopy(&inputFileInfo, arguments.outFile) != -1 )
@@ -51,7 +71,7 @@ int main(int argc, char *argv[])
       }
    }
    
-   if(arguments.flags[printDirectory] == true)
+   if(arguments.flags[printDir] == true)
    {
       printf("\n=== Printing the directory listing of %s ===\n", inputFileInfo.fileName);
       printAllDirectoriesAndFiles(inputFileInfo.mainBoot);

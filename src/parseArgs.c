@@ -22,9 +22,9 @@ void printHelp()
 
 argument_struct_t parseArgs(int argc, char *argv[])
 {
-   argument_struct_t argStruct = {};
+   argument_struct_t argStruct = {}; // Initializes everything to zero
    int opt = 0;
-   while((opt = getopt(argc, argv, "i:o:chvd")) != -1)
+   while((opt = getopt(argc, argv, "i:o::D:hcvd")) != -1)
    {
       switch(opt)
       {
@@ -32,10 +32,11 @@ argument_struct_t parseArgs(int argc, char *argv[])
             argStruct.inFile = optarg;
             break;
          case 'o':
-            if(optarg != NULL)
-               argStruct.outFile = optarg;
-            else
-               argStruct.outFile = argStruct.inFile;
+            argStruct.outFile = optarg;
+            break;
+         case 'D':
+            argStruct.delFile = optarg;
+            argStruct.flags[deleteFile] = true;
             break;
          case 'h':
             argStruct.flags[help] = true;
@@ -47,12 +48,13 @@ argument_struct_t parseArgs(int argc, char *argv[])
             argStruct.flags[verify] = true;
             break;
          case 'd':
-            argStruct.flags[printDirectory] = true;
+            argStruct.flags[printDir] = true;
             break;
          case '?':
-            if(optopt == 'o')
+            if(optopt == 'D')
             {
-               argStruct.outFile = argStruct.inFile;
+               argStruct.delFile = NULL;
+               argStruct.flags[deleteFile] = true;
             }
             break;
       }
