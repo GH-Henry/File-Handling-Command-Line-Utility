@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "routines.h"
 #include "extfat.h"
 #include "parseArgs.h"
 #include "copyExtfat.h"
@@ -55,6 +56,14 @@ int main(int argc, char *argv[])
       if(arguments.delFile != NULL)
       {
          printf("\n=== Deleting %s from %s ===\n", arguments.delFile, inputFileInfo.fileName);
+         if(deleteFileInExfat(&inputFileInfo, arguments.delFile))
+         {
+
+         }
+         else
+         {
+            printf("Unable to find %s\n", arguments.delFile);
+         }
       }
       else
       {
@@ -74,7 +83,7 @@ int main(int argc, char *argv[])
    if(arguments.flags[printDir] == true)
    {
       printf("\n=== Printing the directory listing of %s ===\n", inputFileInfo.fileName);
-      printAllDirectoriesAndFiles(inputFileInfo.mainBoot);
+      printAllDirectoriesAndFiles(&inputFileInfo);
    }
 
    printf("\n");

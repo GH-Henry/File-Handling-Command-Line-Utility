@@ -52,7 +52,8 @@ typedef struct
     char *fileName;
     int fd; // The file descriptor
     // For convenience, these values are extracted from the image
-    int SectorSize;
+    int SectorSize; // in bytes
+    int SectorsPerCluster;
     int FileLength;
     off_t size;
 } fileInfo;
