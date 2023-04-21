@@ -24,7 +24,7 @@ argument_struct_t parseArgs(int argc, char *argv[])
 {
    argument_struct_t argStruct = {}; // Initializes everything to zero
    int opt = 0;
-   while((opt = getopt(argc, argv, "i:o::D:hcvd")) != -1)
+   while((opt = getopt(argc, argv, "i:o:D:hcvd")) != -1)
    {
       switch(opt)
       {

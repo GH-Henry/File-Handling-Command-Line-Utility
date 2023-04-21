@@ -43,7 +43,7 @@ fileInfo initFileInfoStruct(char *fileName)
 
    file.size = statbuf.st_size; // add size to the thing
 
-   void *fp = (void *)mmap(NULL, file.size, PROT_READ, MAP_PRIVATE, file.fd, 0);
+   void *fp = (void *)mmap(NULL, file.size, PROT_READ | PROT_WRITE, MAP_PRIVATE, file.fd, 0);
 
    if (fp == (void *)-1)
    {
@@ -75,52 +75,4 @@ int verifyBoot(fileInfo *file)
    uint32_t bbrChecksum = BootChecksum((uint8_t*) file->backupBoot, (short) file->SectorSize);
    
    return mbrChecksum == bbrChecksum;
-}
-
-void fetchName(char *dest, char *charPtr, int lengthOfName)
-{
-   for(int i = 0; i < lengthOfName; i++)
-   {
-      // In the event that the name is longer than 15 characters, then the next byte
-      // that charPtr will point at will be 0xc1(FileName) to signal another FileNameEntry,
-      // thus must offset by 2 to get to a printable character.
-      if(*charPtr == (char)FileName)
-      {
-         charPtr += 2;
-      }
-      sprintf(dest, "%c", *charPtr);
-      charPtr += 2; // offset by 2 to get to the next character in the name
-      dest++; // move pointer to write to the next character
-   }
-    
-   *dest = '\0'; // Writes '\0' to the end of the string
-}
-
-GDS_t *findDirectoryEntry(GDS_t *GDS, char *fileToFind)
-{
-   int i = 0;
-   while (GDS[i].EntryType)
-   {
-      // Checks if if current GDS is FileAndDirectoryEntry (FileDir - 0x85)
-      // and the next GenericDirectoryStructure (i+1) is a StreamExtensionEntry (StreamExt - 0xc0)
-      // and the one after that (i+2) is the FileNamEntry (FileName - 0xc1)
-      if (GDS[i].InUse && GDS[i].EntryType == FileDir && GDS[i+1].EntryType == StreamExt && GDS[i+2].EntryType == FileName)
-      {
-         // FileAttributes *fileAttributes = (FileAttributes *)((void *)&GDS[i] + FILE_ATTRIBUTE_OFFSET);
-         StreamExtensionEntry *streamExtEntry = (StreamExtensionEntry *)&GDS[i+1];
-         FileNameEntry *fileNameEntry = (FileNameEntry *)&GDS[i+2];
-
-         char *currFilename = malloc((streamExtEntry->NameLength + 1) * sizeof(char));
-         fetchName(currFilename, (char *)fileNameEntry->FileName, streamExtEntry->NameLength);
-
-         if (strcmp(currFilename, fileToFind) == 0)
-         {
-            free(currFilename);
-            return GDS;
-         }
-      }
-
-      i++;
-   }
-   return NULL;
 }
