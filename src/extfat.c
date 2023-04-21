@@ -56,9 +56,9 @@ int main(int argc, char *argv[])
       if(arguments.delFile != NULL)
       {
          printf("\n=== Deleting %s from %s ===\n", arguments.delFile, inputFileInfo.fileName);
-         if(deleteFileInExfat(&inputFileInfo, arguments.delFile))
+         if(deleteFileInExfat(&inputFileInfo, arguments.delFile) != -1)
          {
-
+            printf("Uhh Delted the file yeah\n");
          }
          else
          {
