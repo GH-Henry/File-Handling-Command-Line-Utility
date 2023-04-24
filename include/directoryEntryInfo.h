@@ -8,6 +8,8 @@
 #define FIND_CLUSTER(N, fp, clustHeapOffs, bytesPerSect, sectPerCuster) \
     ((fp + clustHeapOffs * bytesPerSect) + ((N - 2) * bytesPerSect * sectPerCuster))
 
+typedef  uint32_t FAT_Entry; // Each entry in the FAT is 4 bytes
+
 // These values are based on the Directory Entry - Entry Type subsection defined here
 // http://elm-chan.org/docs/exfat_e.html
 enum entryTypeCodes

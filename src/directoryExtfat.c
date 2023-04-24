@@ -25,6 +25,7 @@ void fetchName(char *dest, char *charPtr, int lengthOfName)
 
 GDS_t *findFileAndDirEntry(GDS_t *GDS, char *fileToFind)
 {
+   GDS_t *returnVal = NULL;
    int i = 0;
    while (GDS[i].EntryType)
    {
@@ -42,55 +43,56 @@ GDS_t *findFileAndDirEntry(GDS_t *GDS, char *fileToFind)
          if (strcmp(currFilename, fileToFind) == 0)
          {
             printf("Found %s\n", currFilename);
-            free(currFilename);
-            return &GDS[i];
+            returnVal = &GDS[i];
          }
+
+         free(currFilename);
       }
 
       i++;
    }
-   return NULL;
+
+   return returnVal;
 }
 
-AllocBitmapEntry *findBitMap(GDS_t *GDS)
+void clearFATChain(int fd, FAT_Entry *FAT, size_t offset, uint16_t index)
 {
-   int i = 0;
-   while (GDS[i].EntryType != AllocBitMap)
-   {
-      i++;
-   }
-   return (AllocBitmapEntry *)&GDS[i];
-}
+   uint16_t temp = index;
 
-void clearFATChain(uint16_t *FAT, uint8_t *bitmap, uint16_t index)
-{
-   uint16_t temp = 0x0000;
    do
    {
-      printf("%x > ", index);
+      lseek(fd, offset + index*sizeof(FAT_Entry), SEEK_SET);
       temp = FAT[index];
       FAT[index] = 0x0000;
+      write(fd, &FAT[index], sizeof(FAT_Entry));
       index = temp;
    }
    while (index != 0xFFFF);
-   printf("%x\n", index);
+}
+
+void flipInUseBits(int fd, GDS_t *GDS, size_t offset)
+{
+   lseek(fd, offset, SEEK_SET);
+   int i = 0;
+   do
+   {
+      GDS[i].InUse = 0;
+      write(fd, &GDS[i].EntryType, 1);
+      i++;
+      lseek(fd, sizeof(GDS_t) - 1, SEEK_CUR); // shifts to the next directory struct
+   }
+   while(GDS[i].EntryType != FileDir && GDS[i].EntryType != 0x00);
 }
 
 int deleteFileInExfat(fileInfo *file, char *fileToDelete)
 {
-
    Main_Boot *MB = file->mainBoot;
    void *fp = (void *)file->mainBoot;
-   uint16_t *FAT = file->FAT; // Each entry in the FAT is 16 bytes
-   lseek(file->fd, (off_t)file->FAT, SEEK_SET);
+   size_t offsetToFAT = (size_t)((void*)file->FAT - (void*)file->mainBoot);
 
    // directory
    GDS_t *GDS = FIND_CLUSTER(MB->FirstClusterOfRootDirectory, fp, MB->ClusterHeapOffset,
                              file->SectorSize, file->SectorsPerCluster);
-
-   AllocBitmapEntry *allocBitmapEntry = findBitMap(GDS);
-   uint8_t *allocBitmap = FIND_CLUSTER(allocBitmapEntry->FirstCluster, fp, MB->ClusterHeapOffset,
-                                       file->SectorSize, file->SectorsPerCluster);
 
    GDS = findFileAndDirEntry(GDS, fileToDelete);
    if (GDS == NULL)
@@ -100,12 +102,19 @@ int deleteFileInExfat(fileInfo *file, char *fileToDelete)
 
    // If GDS is a FileAndDirectoryEntry, then the next entry after that is the StreamExtentionEntry
    StreamExtensionEntry *streamExtEntry = (StreamExtensionEntry *)(GDS + 1);
-   clearFATChain(FAT, allocBitmap, streamExtEntry->FirstCluster);
-   
+   size_t offsetToFirstDirEntry = (size_t)((void *)&GDS->EntryType - (void *)file->mainBoot);
+
+   if(!streamExtEntry->NoFatChain)
+   {
+      clearFATChain(file->fd, file->FAT, offsetToFAT, streamExtEntry->FirstCluster);
+   }
+
+   flipInUseBits(file->fd, GDS, offsetToFirstDirEntry);
+
    if (msync((void *)file->mainBoot, file->size, MS_SYNC) == -1)
    {
         perror("msync error");
-        return -1;
+        return -2;
    }
 
    return 0;
