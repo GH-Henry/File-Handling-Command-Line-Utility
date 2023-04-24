@@ -28,8 +28,11 @@ unit_tests: munit_example
 
 # this test needs to be deleted once we get some real tests
 # for the problem at hand
-munit_example:unit_tests/unitTests.c
-	${CC} ${CFLAGS} unit_tests/unitTests.c -I./unit_tests/ ${CINCS} -o $@ $^
+munit_example:unit_tests/munit
+	${CC} ${CFLAGS} unit_tests/munit_example -I./unit_tests/munit_example ${CINCS} -o $@ $^
+
+#munit_example:unit_tests/
+#	${CC} ${CFLAGS} unit_tests/unitTests.c -I./unit_tests/unitTests.c ${CINCS} -o $@ $^
 
 # requirements tests
 system_tests: extfat
