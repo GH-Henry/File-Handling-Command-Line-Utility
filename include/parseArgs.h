@@ -1,14 +1,15 @@
 #pragma once
 
 #include <stdbool.h>
-#define NUM_FLAGS 4
+#define NUM_FLAGS 5
 
 enum flagTypes
 {
     help = 0,
     copy = 1,
     verify = 2,
-    printDirectory = 3
+    printDirectory = 3,
+    extractDirectory = 4
 };
 
 typedef struct
@@ -16,6 +17,7 @@ typedef struct
     char *inFile;
     char *outFile;
     bool flags[NUM_FLAGS];
+    char *extractFile; 
 } argument_struct_t;
 
 void printHelp();

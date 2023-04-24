@@ -7,7 +7,7 @@
 #include <sys/mman.h>
 #include <stddef.h>
 #include <stdint.h>
-
+#include <string.h>
 #include "extfat.h"
 #include "directoryExtfat.h"
 
@@ -70,6 +70,12 @@ typedef struct
     uint8_t GeneralSecondaryFlags;
     uint8_t FileName[30];
 } FileNameEntry;
+
+typedef struct
+{
+    char words[32];
+
+} Actualfilecontent;
 
 void printName(char *charPtr, int legnthOfName, int dirLevel)
 {
@@ -136,4 +142,81 @@ void printAllDirectoriesAndFiles(void *fp)
                                                bytesPerSector, sectorsPerCluster);
 
     printDirectory(GDS, fp, MB->ClusterHeapOffset, bytesPerSector, sectorsPerCluster, 1);
+}
+
+void printcontent(GenericDirectoryStruct *GDS, void *fp, int clustHeapOffs, int bytesPerSector, int sectorsPerCluster, char *Filename, char *output)
+{
+    int i = 0;
+    char Filenameinimage[100] = "";
+    char *c1ptr = NULL;
+
+    while (GDS[i].EntryType)
+    {
+        // Checks if if current GDS is FileAndDirectoryEntry (0x85)
+        // and the next GenericDirectoryStructure (i+1) is a StreamExtensionEntry (0xc0)
+        // and the one after that (i+2) is the FileNamEntry (0xc1)
+        if (GDS[i].InUse && GDS[i].EntryType == 0x85 && GDS[i + 1].EntryType == 0xc0 && GDS[i + 2].EntryType == 0xc1)
+        {
+            FileAttributes *fileAttributes = (FileAttributes *)((void *)&GDS[i] + FILE_ATTRIBUTE_OFFSET);
+            StreamExtensionEntry *streamExtEntry = (StreamExtensionEntry *)&GDS[i + 1];
+            if (fileAttributes->Directory != 1)
+            {
+                c1ptr = (char *)&(GDS[i + 2]);
+                c1ptr += 2;
+                for (int j = 0; j < streamExtEntry->NameLength; j++)
+                {
+                    Filenameinimage[j] = *c1ptr;
+
+                    c1ptr += 2;
+                }
+                // printf("(%s)(%s)",Filename, Filenameinimage);
+            }
+            if (strcmp(Filename, Filenameinimage) == 0)
+            {
+                printf("found");
+                FILE *fpout = fopen(output, "w");
+                GenericDirectoryStruct *contentcluster = FIND_CLUSTER(streamExtEntry->FirstCluster, fp, clustHeapOffs,
+                                                                      bytesPerSector, sectorsPerCluster);
+                Actualfilecontent *content = NULL;
+                int w = 0;
+
+                while (contentcluster[w].EntryType)
+                {
+                    content = (Actualfilecontent *)(void *)&contentcluster[w];
+                    for (int z = 0; z < (int)sizeof(GenericDirectoryStruct); z++)
+                    {
+                     //   printf("%c", (*content).words[z]);
+                        fputc((*content).words[z], fpout);
+                    }
+                    w++;
+                }
+                fclose(fpout);
+            }
+            // If the attribute of the file is a directory, then recursively call this function to print its
+            // contents, using its corresponding cluster, and increasing the directory level
+            if (fileAttributes->Directory)
+            {
+                GenericDirectoryStruct *subGDS = FIND_CLUSTER(streamExtEntry->FirstCluster, fp, clustHeapOffs,
+                                                              bytesPerSector, sectorsPerCluster);
+                printcontent(subGDS, fp, clustHeapOffs, bytesPerSector, sectorsPerCluster, Filename, output);
+            }
+        }
+        i++;
+    }
+}
+
+
+void printfilecontent(void *fp, char *Filename, char *outputfilename)
+{
+    Main_Boot *MB = (Main_Boot *)fp;
+    int bytesPerSector = 2 << (MB->BytesPerSectorShift - 1);
+    int sectorsPerCluster = 2 << (MB->SectorsPerClusterShift - 1);
+
+    // directory
+    GenericDirectoryStruct *GDS = FIND_CLUSTER(MB->FirstClusterOfRootDirectory, fp, MB->ClusterHeapOffset,
+                                               bytesPerSector, sectorsPerCluster);
+
+    // printf("1(%s)", Filename);
+
+    printcontent(GDS, fp, MB->ClusterHeapOffset, bytesPerSector, sectorsPerCluster, Filename, outputfilename);
 }

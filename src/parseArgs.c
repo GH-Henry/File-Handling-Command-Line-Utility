@@ -24,7 +24,7 @@ argument_struct_t parseArgs(int argc, char *argv[])
 {
    argument_struct_t argStruct = {};
    int opt = 0;
-   while((opt = getopt(argc, argv, "i:o:chvd")) != -1)
+   while((opt = getopt(argc, argv, "i:o:x:chvd")) != -1)
    {
       switch(opt)
       {
@@ -51,6 +51,10 @@ argument_struct_t parseArgs(int argc, char *argv[])
             break;
          case 'd':
             argStruct.flags[printDirectory] = true;
+            break;
+         case 'x':
+            argStruct.flags[extractDirectory] = true;
+            argStruct.extractFile = optarg;
             break;
          case '?':
             if(optopt == 'o')
