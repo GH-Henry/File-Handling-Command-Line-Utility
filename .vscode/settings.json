@@ -23,6 +23,11 @@
         "initializer_list": "c",
         "utility": "c",
         "stdio.h": "c",
-        "routines.h": "c"
+        "routines.h": "c",
+        "munit.h": "c",
+        "copyextfat.h": "c",
+        "extfat.h": "c",
+        "util.h": "c",
+        "directoryextfat.h": "c"
     }
 }

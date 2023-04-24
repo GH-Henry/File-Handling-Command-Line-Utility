@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "copyExtfat.h"
+#include "./../include/copyExtfat.h"
 #include "util.h"
 
 void writeByteInFile(char *outputFilename, size_t offset)

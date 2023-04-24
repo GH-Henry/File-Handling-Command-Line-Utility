@@ -15,6 +15,9 @@ CFLAGS=-Wall -Wextra -O0 -std=c17 -g3 -fsanitize=address -fsanitize=bounds-stric
 # removed from the makefile if it causes problems.
 
 CINCS=-I./include
+SRC = src/extfat.c common/routines.c src/parseArgs.c src/copyExtfat.c src/util.c src/directoryExtfat.c
+TESTSRC = unit_tests/unitTests.c unit_tests/munit/munit.c
+OBJ = $(SRC:.c=.o)
 
 all:mmap fread unit_tests extfat crc_example
 
@@ -22,17 +25,27 @@ all:mmap fread unit_tests extfat crc_example
 extfat:src/extfat.c common/routines.c src/parseArgs.c src/copyExtfat.c src/util.c src/directoryExtfat.c
 	${CC} ${CFLAGS} ${CINCS} -o $@ $^
 
-
 # unit tests
-unit_tests: munit_example
+unit_tests: output test
+
+output: ${SRC}
+	${CC} ${CFLAGS} ${CINCS} ${SRC} -o output
+
+test: ${TESTSRC}
+	${CC} ${CFLAGS} ${CINCS} ${TESTSRC} -o test
+
+%.o: %.c
+	${CC} ${CFLAGS} -c $< -o $@
 
 # this test needs to be deleted once we get some real tests
 # for the problem at hand
-munit_example:unit_tests/munit
-	${CC} ${CFLAGS} unit_tests/munit_example -I./unit_tests/munit_example ${CINCS} -o $@ $^
+#munit_example:unit_tests/munit
+#	${CC} ${CFLAGS} unit_tests/munit_example -I./unit_tests/munit_example ${CINCS} -o $@ $^
 
-#munit_example:unit_tests/
-#	${CC} ${CFLAGS} unit_tests/unitTests.c -I./unit_tests/unitTests.c ${CINCS} -o $@ $^
+#munit_example:unit_tests
+#	${CC} ${CFLAGS} unit_tests/unitTests.c -I./unit_tests/unitTests
+#	src/extfat.c common/routines.c src/parseArgs.c src/copyExtfat.c src/util.c src/directoryExtfat.c
+#	${CINCS} -c -o $@ $^
 
 # requirements tests
 system_tests: extfat
@@ -84,4 +97,4 @@ run_tests:
 	echo "here i would be running the requirements tests"
 
 clean:
-	-rm -f mmap fread munit_example extfat crc_example
+	-rm -f mmap fread munit_example extfat crc_example output test test_output.bin overwrite.c
