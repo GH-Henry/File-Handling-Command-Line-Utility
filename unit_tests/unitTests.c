@@ -201,11 +201,38 @@ void printName(char *charPtr, int legnthOfName, int dirLevel)
     printf("\n");
 }
 
+MunitResult test_freeFileInfoStruct()
+{
+    fileInfo file = initFileInfoStruct("test.image");
+    // unmap the file
+    if (munmap(file.mainBoot, file.size))
+    {
+        perror("error from unmap:");
+        exit(0);
+    }
+
+    // close the file
+    if (close(file.fd))
+    {
+        perror("close");
+    }
+    file.fd = 0;
+    return MUNIT_OK;
+}
+
+MunitResult test_randomFunction()
+{
+    //to be done later :3
+    return MUNIT_OK;
+}
+
 MunitTest tests[] = 
 {
     {"/test_mmapCopy", test_mmapCopy, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/test_printName", test_printName, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/test_writeByteInFile", test_writeByteInFile, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+    {"/test_freeFileInfoStruct", test_freeFileInfoStruct, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+    {"/test_randomFunction", test_randomFunction, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}
 };
 
