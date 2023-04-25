@@ -28,6 +28,7 @@
         "copyextfat.h": "c",
         "extfat.h": "c",
         "util.h": "c",
-        "directoryextfat.h": "c"
+        "directoryextfat.h": "c",
+        "parseargs.h": "c"
     }
 }

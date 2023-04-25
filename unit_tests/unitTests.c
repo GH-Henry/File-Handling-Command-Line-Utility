@@ -1,5 +1,118 @@
 #include "unitTests.h"
 
+fileInfo initFileInfoStruct(char *fileName)
+{
+   fileInfo file = {};
+   file.fd = open(fileName, O_RDWR);
+   if (file.fd == -1)
+   {
+      perror("file open");
+      exit(0);
+   }
+
+   struct stat statbuf;
+   if (fstat(file.fd, &statbuf))
+   {
+      perror("stat of file");
+      exit(0);
+   }
+
+   file.size = statbuf.st_size; // add size to the thing
+
+   void *fp = (void *)mmap(NULL,
+                           file.size,
+                           PROT_READ,
+                           MAP_PRIVATE,
+                           file.fd,
+                           0); // note the offset
+
+   if (fp == (void *)-1)
+   {
+      perror("mmap");
+      exit(0);
+   }
+
+   // first, is the Main Boot record
+   Main_Boot *MB = (Main_Boot *)fp;
+   file.mainBoot = MB;
+
+   int bytesPerSector = 2 << (file.mainBoot->BytesPerSectorShift - 1); // Can be added to a property of the struct
+   
+   void *fp_ptr = (void*)(intptr_t)fp;
+   file.backupBoot = (Main_Boot *)(fp_ptr + 12 * bytesPerSector);
+   file.SectorSize = bytesPerSector;
+   file.FAT = (uint32_t *)(fp_ptr + (file.mainBoot->FatOffset * bytesPerSector));
+   file.fileName = fileName;
+
+   return file;
+}
+
+MunitResult test_mmapCopy()
+{
+    fileInfo inputFileInfo = initFileInfoStruct("test.image");
+    char *outputFilename = "test145114141.image";
+    if( strcmp(inputFileInfo.fileName, outputFilename) == 0 )
+    {
+        printf("Same input and output file name, nothing will happen.\n");
+        return -1;
+    }
+
+    size_t size = inputFileInfo.size;
+    void *source;
+    void *destination;
+    
+    int fout = open(outputFilename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    if (fout < 0) //Error Checking
+    {
+        perror("OutputFile");
+        return -1;
+    }
+
+    source = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE, inputFileInfo.fd, 0); //Passing in the read file
+    if (source == MAP_FAILED) //Error Checking
+    {
+        perror("Map failed");
+        return -1;
+    }
+
+    destination = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fout, 0); //Using MMAP to access output file
+    if (destination == MAP_FAILED) //Error Checking
+    {
+        perror("Map failed");
+        return -1;
+    }
+
+    writeByteInFile(outputFilename, size);
+
+    printf("the size is %ld\n", size);
+    
+    memcpy(destination, source, size);     //Map memory over
+
+    if (msync(destination, size, MS_SYNC) == -1) 
+    {
+            perror("msync error");
+            return -1;
+    }
+
+    if (munmap(source, size) < 0)
+    {
+        perror("unmap");
+        return -1;
+    }
+    if (munmap(destination, size) < 0)
+    {
+        perror("unmap");
+        return -1;
+    }
+
+    if (close(fout))
+    {
+        perror("Close");
+    }
+
+    return MUNIT_OK;
+}
+
 MunitResult test_writeByteInFile() 
 {
    char *outputFilename = "test_output.bin";
@@ -46,7 +159,7 @@ void writeByteInFile(char *outputFilename, size_t offset)
 MunitResult test_printName()
 {
     char buffer[256];
-    FILE* tempFile = freopen(buffer, (long int*)sizeof(buffer), 'w');
+    FILE* tempFile = fopen("test.image", "rw");
     FILE* oldStdout = stdout;
     stdout = tempFile;
 
@@ -90,6 +203,7 @@ void printName(char *charPtr, int legnthOfName, int dirLevel)
 
 MunitTest tests[] = 
 {
+    {"/test_mmapCopy", test_mmapCopy, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/test_printName", test_printName, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/test_writeByteInFile", test_writeByteInFile, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}

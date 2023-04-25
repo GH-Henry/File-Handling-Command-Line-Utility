@@ -23,7 +23,7 @@
 ./extfat -i test.image -c -v -p
 ./extfat -i test.image -c -v -p -x test.image 
 ```
-### Internals
+## Internals
 
 ### Build Process
 ```bash
@@ -32,6 +32,7 @@
 
 To run the tests
 % make tests
+% make unit_tests
 
 ```
 
