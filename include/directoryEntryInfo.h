@@ -1,23 +1,26 @@
 #pragma once
-
-#include <stdint.h>
+/* This file contains struct, enum, and union definitions of what is used
+ * to manipulate and find files in the extfat program. */
 
 #include "extfat.h"
 
-// Finds cluster N
-#define FIND_CLUSTER(N, fp, clustHeapOffs, bytesPerSect, sectPerCuster) \
-    ((fp + clustHeapOffs * bytesPerSect) + ((N - 2) * bytesPerSect * sectPerCuster))
+typedef struct ClusterInfo
+{
+    uint32_t clustHeapOffs;
+    uint32_t bytesPerSect;
+    uint32_t sectPerCluster;
+    size_t   bytesPerCluster;
+} ClusterInfo;
 
-typedef  uint32_t FAT_Entry; // Each entry in the FAT is 4 bytes
+typedef uint32_t FATChain; // Each entry in the FAT is 4 bytes
 
 // These values are based on the Directory Entry - Entry Type subsection defined here
 // http://elm-chan.org/docs/exfat_e.html
 enum entryTypeCodes
 {
-    AllocBitMap = 0x81,
-    FileDir     = 0x85,
-    StreamExt   = 0xc0,
-    FileName    = 0xc1
+    FileDir   = 0x85,
+    StreamExt = 0xc0,
+    FileName  = 0xc1
 };
 
 // The EntryType union and GenericDirectoryStruct are based on the directories defined here
@@ -43,26 +46,6 @@ typedef struct GenericDirectoryStruct
     uint64_t DataLength;
 } GDS_t;
 
-// The Allocation Bitmap Entry struct is based on the directory entry defined here
-// https://learn.microsoft.com/en-us/windows/win32/fileio/exfat-specification#71-allocation-bitmap-directory-entry
-typedef struct AllocationBitmapEntry
-{
-    __UNION_ENTRY_TYPE__;
-    union
-    {
-        uint8_t BitMapFlags;
-        struct
-        {
-            // If 0 then it's the first bitmap, if 1 then it's the second bitmap
-            uint8_t bitMapNum : 1;
-            uint8_t reserved  : 7;
-        };
-    };
-    uint8_t  Reserved[18];
-    uint32_t FirstCluster;
-    uint64_t DataLength;
-} AllocBitmapEntry;
-
 // From 7.4 File Directory Entry, the FileAttributes has an offset of 4
 // https://learn.microsoft.com/en-gb/windows/win32/fileio/exfat-specification#74-file-directory-entry
 #define FILE_ATTRIBUTE_OFFSET 4
@@ -79,7 +62,6 @@ typedef struct FileAttributes
     uint16_t Archive : 1;
     uint16_t Reserved2 : 10;
 } FileAttributes;
-
 
 // The StreamExtensionEntry struct is based on the directory entry defined here
 // https://learn.microsoft.com/en-gb/windows/win32/fileio/exfat-specification#76-stream-extension-directory-entry
