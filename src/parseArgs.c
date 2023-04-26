@@ -16,6 +16,7 @@ void printHelp()
    printf("Copy file:\n\"-c\"\n\n");
    printf("Verify file:\n\"-v\"\n\n");
    printf("Print directory:\n\"-d\"\n\n");
+   printf("Delete a file:\n\"-D fileName\"\n\n");
    printf("Input file (required):\n\"-i fileName\"\n\n");
    printf("Output file:\n\"-o fileName\"\n\n");
 }
@@ -24,7 +25,7 @@ argument_struct_t parseArgs(int argc, char *argv[])
 {
    argument_struct_t argStruct = {}; // Initializes everything to zero
    int opt = 0;
-   while((opt = getopt(argc, argv, "i:o:D:hcvd")) != -1)
+   while((opt = getopt(argc, argv, "i:o::D:hcvd")) != -1)
    {
       switch(opt)
       {
@@ -33,10 +34,6 @@ argument_struct_t parseArgs(int argc, char *argv[])
             break;
          case 'o':
             argStruct.outFile = optarg;
-            break;
-         case 'D':
-            argStruct.delFile = optarg;
-            argStruct.flags[deleteFile] = true;
             break;
          case 'h':
             argStruct.flags[help] = true;
@@ -49,6 +46,10 @@ argument_struct_t parseArgs(int argc, char *argv[])
             break;
          case 'd':
             argStruct.flags[printDir] = true;
+            break;
+         case 'D':
+            argStruct.delFile = optarg;
+            argStruct.flags[deleteFile] = true;
             break;
          case '?':
             if(optopt == 'D')
@@ -64,6 +65,5 @@ argument_struct_t parseArgs(int argc, char *argv[])
    {
       argStruct.outFile = argStruct.inFile;
    }
-
    return argStruct;
 }
