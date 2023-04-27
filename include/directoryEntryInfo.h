@@ -1,6 +1,7 @@
 #pragma once
 /* This file contains struct, enum, and union definitions of what is used
- * to manipulate and find files in the extfat program. */
+ * to manipulate and find files in the extfat program.
+ * Primarily used in directoryExtfat.c and directoryHelperFn.c */
 
 #include "extfat.h"
 
@@ -18,6 +19,7 @@ typedef uint32_t FATChain; // Each entry in the FAT is 4 bytes
 // http://elm-chan.org/docs/exfat_e.html
 enum entryTypeCodes
 {
+    AllocBitM = 0x81,
     FileDir   = 0x85,
     StreamExt = 0xc0,
     FileName  = 0xc1
@@ -45,6 +47,17 @@ typedef struct GenericDirectoryStruct
     uint32_t FirstCluster;
     uint64_t DataLength;
 } GDS_t;
+
+// The Allocation Bitmap Entry struct is based on the directory entry defined here
+// https://learn.microsoft.com/en-us/windows/win32/fileio/exfat-specification#71-allocation-bitmap-directory-entry
+typedef struct AllocationBitmapEntry
+{
+    __UNION_ENTRY_TYPE__;
+    uint8_t  BitMapFlags;
+    uint8_t  Reserved[18];
+    uint32_t FirstCluster;
+    uint64_t DataLength;
+} AllocBitmapEntry;
 
 // From 7.4 File Directory Entry, the FileAttributes has an offset of 4
 // https://learn.microsoft.com/en-gb/windows/win32/fileio/exfat-specification#74-file-directory-entry
