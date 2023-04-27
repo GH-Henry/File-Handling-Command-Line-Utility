@@ -20,7 +20,7 @@ void fetchNameFromExtFAT(char *dest, char *ptrToFilename, int lengthOfName)
    {
       // In the event that the name is longer than 15 characters, then the next byte
       // that ptrToFilename will point at will be 0xc1(FileName) to signal another FileNameEntry,
-      // thus must offset by 2 to get to a printable character.
+      // thus must offset by 2 to get to the next printable character.
       if(*ptrToFilename == (char)FileName)
       {
          ptrToFilename += 2;
@@ -52,7 +52,7 @@ GDS_t *findFileAndDirEntry(GDS_t *GDS, char *fileToFind, void *fp, ClusterInfo c
          StreamExtensionEntry *streamExtEntry = (StreamExtensionEntry *)&GDS[i+1];
          FileNameEntry *fileNameEntry = (FileNameEntry *)&GDS[i+2];
 
-         // Gets the filename from exFAT into a standard C string
+         // Gets the filename from exFAT into a standard C string. +1 is for '\0'.
          char *currFilename = malloc((streamExtEntry->NameLength + 1) * sizeof(char));
          fetchNameFromExtFAT(currFilename, (char *)fileNameEntry->FileName, streamExtEntry->NameLength);
 
@@ -114,8 +114,7 @@ void clearFATChainAndData(void *fp, int fd, FATChain *FAT, ClusterInfo clustInfo
    while (index != 0xFFFFFFFF);
 }
 
-/* Turns the InUse bit off of FileNameEntries and empties the data. offset is
- * the number of bytes from the start to the first FileNameEntry. */
+/* Turns the InUse bit off of FileNameEntries and empties the data. */
 void clearFileNameData(int fd, void *fp, FileNameEntry *firstEntry, int numOfFilenameEntries)
 {
    // An empty FileNameEntry used to copy over into the image file to
@@ -129,6 +128,7 @@ void clearFileNameData(int fd, void *fp, FileNameEntry *firstEntry, int numOfFil
    // Move to the target FileNameEntry in the image
    lseek(fd, (off_t)((void *)firstEntry - fp), SEEK_SET);
  
+   // Goes through each FileNameEntry belonging to the file
    for(int i = 0; i < numOfFilenameEntries; i++)
    {
       // Writes the emptyFileNameEntry to the exFAT image file
@@ -136,13 +136,19 @@ void clearFileNameData(int fd, void *fp, FileNameEntry *firstEntry, int numOfFil
    }
 }
 
-/* Flips the InUseBits of DirectoryEntries until it encounters an entry where InUse is off
- * Should be used after clearing FileNameData to ensure it does not loop indefinately. */
-void turnOffInUseBits(int fd, void *fp, GDS_t *GDS)
+/* Flips the InUseBits of DirectoryEntries until it encounters the last
+ * FileNameEntry. Uses clearFileNameData() to empty and turn off the InUse bit
+ * of FileNameEntries. */
+void turnOffInUseBits(int fd, void *fp, GDS_t *GDS, int numOfFilenameEntries)
 {
    // Seek to the directory struct in the file
    lseek(fd, (off_t)((void *)GDS - fp), SEEK_SET);
 
+   /* Note that the first directory should be a FileAndDirEntry (0x85), then
+    * the one after that is StreamExtEntry (0xc0), which the one following that
+    * is FileNameEntry (0xc1). When FileNameEntry is encountered, leave the 
+    * loop and use clearFileNameData() to handle the last entries corresponding
+    * to the file to delete. */
    int i = 0;
    do
    {
@@ -150,11 +156,14 @@ void turnOffInUseBits(int fd, void *fp, GDS_t *GDS)
       write(fd, &GDS[i].EntryType, 1); // Write it into the file
       i++; // Move to the next directory struct
 
-      // shifts to the next directory struct in the file, 
-      // -1 is there to account for the offset from writing a byte
+      /* shifts to the next directory struct in the file, -1 is 
+       * there to account for the offset from write() writing a byte */
       lseek(fd, sizeof(GDS_t) - 1, SEEK_CUR);
    }
-   while(GDS[i].InUse);
+   while(GDS[i].EntryType != FileName);
+
+   // Clears and turns off InUse bits of the FileNameEntries
+   clearFileNameData(fd, fp, (FileNameEntry *)&GDS[i], numOfFilenameEntries);
 }
 
 /* Prints the filename inside the exFAT image with the proper amount of tabs
@@ -167,7 +176,7 @@ void printFileName(char *ptrToFilename, int lengthOfName, int dirLevel)
       printf("\t");
    }
 
-   // Gets the filename from exFAT into a standard C string
+   // Gets the filename from exFAT into a standard C string. +1 is for '\0'.
    char *filename = malloc((lengthOfName + 1) * sizeof(char));
    fetchNameFromExtFAT(filename, ptrToFilename, lengthOfName);
 
@@ -218,6 +227,9 @@ void printDirectory(GDS_t *GDS, void *fp, ClusterInfo clustInfo, int dirLevel)
  * returns  1 if the file is a directory (does not delete it) */
 int deleteFileInExfat(fileInfo *file, char *fileToDelete)
 {
+   /* Here to help make the code look cleaner and 
+    * reduce number of -> operations */
+   int fd = file->fd;
    Main_Boot *MB = file->mainBoot;
    void *fp = (void *)file->mainBoot;
 
@@ -230,6 +242,8 @@ int deleteFileInExfat(fileInfo *file, char *fileToDelete)
 
    // Finds the FileAndDirEntry (0x85) of the fileToDelete
    GDS = findFileAndDirEntry(GDS, fileToDelete, fp, clustInfo);
+
+   // Used to check if the target file is a directory
    FileAttributes *fileAttributes = (FileAttributes *)((void *)GDS + FILE_ATTRIBUTE_OFFSET);
 
    // If GDS is NULL, the findFileAndDirEntry failed to find the file (return -1)
@@ -243,12 +257,11 @@ int deleteFileInExfat(fileInfo *file, char *fileToDelete)
       return 1;
    }
 
-   /* If GDS is a FileAndDirectoryEntry(0x85 EntryType), then the next entry after that is the
-    * StreamExtentionEntry and the entry after the StreamExtensionEntry is the first FileNameEntry */
+   /* If GDS is a FileAndDirectoryEntry(0x85 EntryType), then the
+    * next entry after that is the StreamExtentionEntry. */
    StreamExtensionEntry *streamExtEntry = (StreamExtensionEntry *)&GDS[1];
-   FileNameEntry *fileNameEntry = (FileNameEntry *)&GDS[2];
 
-   /* Bit shift right by 4 is the same as doing an integer division by 16.
+   /* Bit shift right by 4 is the same as integer division by 16.
     * There is always at least 1 filename entry, hence the +1.
     * One file name entry is large enough to hold 15 characters max, so if a filename
     * has 16 characters, then that means there are two filename entries. The first
@@ -262,22 +275,17 @@ int deleteFileInExfat(fileInfo *file, char *fileToDelete)
        * or just clear a single cluster */
       if(!streamExtEntry->NoFatChain)
       {
-         clearFATChainAndData(fp, file->fd, file->FAT, clustInfo, streamExtEntry->FirstCluster);
+         clearFATChainAndData(fp, fd, file->FAT, clustInfo, streamExtEntry->FirstCluster);
       }
       else // there is only one cluster of file data
       {
-         clearCluster(file->fd, fp, streamExtEntry->FirstCluster, clustInfo);
+         clearCluster(fd, fp, streamExtEntry->FirstCluster, clustInfo);
       }
    }
 
-   /* ClearFileNameData empties the FileNameEntries and sets the InUse bit to 0
-    * turnOffInUseBits starts at the FileAndDirEntry, and turns off InUse bits until
-    * it encounters a bit that's already turned off.
-    * Since the order of DirEntries is FileAndDir(0x85), then StreamExtEntry (0xc0)
-    * then the FileNameEntries(0xc1), since clearFileName sets the FileNameEntry bits off,
-    * turnOffInUseBits will turn off the InUse for FileAndDir and StreamExtEntry, then stop. */
-   clearFileNameData(file->fd, fp, fileNameEntry, numOfFilenameEntries);
-   turnOffInUseBits(file->fd, fp, GDS);
+   /* turnOffInUseBits starts at the FileAndDirEntry, and turns off InUse bits
+    * of all directory entries until it hits the last FileNameEntry. */
+   turnOffInUseBits(fd, fp, GDS, numOfFilenameEntries);
 
    return 0;
 }
