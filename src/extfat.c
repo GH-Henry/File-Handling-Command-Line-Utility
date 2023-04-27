@@ -51,10 +51,37 @@ int main(int argc, char *argv[])
       }
    }
    
-   if(arguments.flags[printDirectory] == true)
+   if(arguments.flags[deleteFile] == true)
+   {
+      if(arguments.delFile != NULL) // Checks if a target file to delete is specified
+      {
+         printf("\n=== Deleting %s from %s ===\n", arguments.delFile, inputFileInfo.fileName);
+         switch(deleteFileInExfat(&inputFileInfo, arguments.delFile))
+         {
+            case -1:
+               // Target file does not exist
+               printf("Unable to find %s.\n", arguments.delFile);
+               break;
+            case  0:
+               // Target file found and deleted
+               printf("%s has been deleted.\n", arguments.delFile);
+               break;
+            case  1:
+               // Target file is a directory
+               printf("%s is a directory, unable to delete.\n", arguments.delFile);
+               break;
+         }
+      }
+      else
+      {
+         printf("\n=== Missing target file to delete in %s ===\n", inputFileInfo.fileName);
+      }
+   }
+
+   if(arguments.flags[printDir] == true)
    {
       printf("\n=== Printing the directory listing of %s ===\n", inputFileInfo.fileName);
-      printAllDirectoriesAndFiles(inputFileInfo.mainBoot);
+      printAllDirectoriesAndFiles(&inputFileInfo);
    }
 
    printf("\n");

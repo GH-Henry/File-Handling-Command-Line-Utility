@@ -1,139 +1,93 @@
-#include <stdlib.h>
-#include <assert.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "directoryEntryInfo.h"
+#include "directoryHelperFn.h"
 
-#include "extfat.h"
-#include "directoryExtfat.h"
+#define START_DIR_LVL 1
 
-// From 7.4 File Directory Entry, the FileAttributes have an offset of 4
-// https://learn.microsoft.com/en-gb/windows/win32/fileio/exfat-specification#74-file-directory-entry
-#define FILE_ATTRIBUTE_OFFSET 4
-
-// Finds cluster N
-#define FIND_CLUSTER(N, fp, clustHeapOffs, bytesPerSect, sectPerCuster) \
-    ((fp + clustHeapOffs * bytesPerSect) + ((N - 2) * bytesPerSect * sectPerCuster))
-
-// The following structs are based on the directories defined here
-// https://learn.microsoft.com/en-gb/windows/win32/fileio/exfat-specification
-typedef struct
+/* Deletes a target file in the exFAT image.
+ * returns  0 when the file exists and is deleted 
+ * returns -1 if the file is not found
+ * returns  1 if the file is a directory (does not delete it) */
+int deleteFileInExfat(fileInfo *file, char *fileToDelete)
 {
-    union
-    {
-        uint8_t EntryType;
-        struct
-        {
-            uint8_t TypeCode : 5;
-            uint8_t TypeImportance : 1;
-            uint8_t TypeCategory : 1;
-            uint8_t InUse : 1;
-        };
-    };
-    uint8_t CustomDefined[19];
-    uint32_t FirstCluster;
-    uint64_t DataLength;
-} GenericDirectoryStruct;
+   /* Here to help make the code look cleaner and 
+    * reduce number of -> operations */
+   int fd = file->fd;
+   Main_Boot *MB = file->mainBoot;
+   void *fp = (void *)file->mainBoot;
 
-typedef struct
-{
-    uint16_t ReadOnly : 1;
-    uint16_t Hidden : 1;
-    uint16_t System : 1;
-    uint16_t Reserved1 : 1;
-    uint16_t Directory : 1;
-    uint16_t Archive : 1;
-    uint16_t Reserved2 : 10;
-} FileAttributes;
+   // Contains information about cluster/sector size and offset location
+   ClusterInfo clustInfo = {MB->ClusterHeapOffset, file->SectorSize, file->SectorsPerCluster,
+                            file->SectorSize * file->SectorsPerCluster};
 
-typedef struct
-{
-    uint8_t  EntryType;
-    uint8_t  GeneralSecondaryFlags;
-    uint8_t  Reserved;
-    uint8_t  NameLength;
-    uint8_t  NameHash[2];
-    uint8_t  Reserved2[2];
-    uint8_t  ValidDataLength[8];
-    uint8_t  Reserved3[4];
-    uint32_t FirstCluster;
-    uint64_t DataLength;
-} StreamExtensionEntry;
+   // Goes to the first directory entry
+   GDS_t *GDS = findCluster(MB->FirstClusterOfRootDirectory, fp, clustInfo);
 
-typedef struct
-{
-    uint8_t EntryType;
-    uint8_t GeneralSecondaryFlags;
-    uint8_t FileName[30];
-} FileNameEntry;
+   // The allocation bitmap of the exFAT file, will be used when clearing cluster data
+   uint8_t *allocBitMap = findAllocBitMap(GDS, fp, clustInfo);
 
-void printName(char *charPtr, int legnthOfName, int dirLevel)
-{
-    // Prints the proper number of tabs dependidng on dirLevel
-    for(int i = 0; i < dirLevel; i++)
-    {
-        printf("\t");
-    }
+   // Finds the FileAndDirEntry (0x85) of the fileToDelete
+   GDS_t *FileDirEntry = findFileAndDirEntry(GDS, fileToDelete, fp, clustInfo);
 
-    for(int i = 0; i < legnthOfName; i++)
-    {
-        // In the event that the name is longer than 15 characters, then the next byte
-        // that charPtr will point at will be 0xc1 to signal another FileNameEntry,
-        // thus must offset by 2 to get to a printable character.
-        if(*charPtr == (char)0xc1)
-        {
-            charPtr += 2;
-        }
-        printf("%c", *charPtr);
-        charPtr += 2; // offset by 2 to get to the next character in the name
-    }
+   // Used to check if the target file is a directory
+   FileAttributes *fileAttributes = (FileAttributes *)((void *)FileDirEntry + FILE_ATTRIBUTE_OFFSET);
 
-    printf("\n");
+   /* If FileDirEntry is NULL, then findFileAndDirEntry failed to find the file (return -1)
+    * If the entry is a directory, then do not delete it and return 1. */
+   if (FileDirEntry == NULL)
+   {
+      return -1;
+   }
+   else if(fileAttributes->Directory)
+   {
+      return 1;
+   }
+
+   /* If GDS is a FileAndDirectoryEntry(0x85 EntryType), then the
+    * next entry after that is the StreamExtentionEntry. */
+   StreamExtensionEntry *streamExtEntry = (StreamExtensionEntry *)(FileDirEntry + 1);
+
+   /* Bit shift right by 4 is the same as integer division by 16.
+    * There is always at least 1 filename entry, hence the +1.
+    * One file name entry is large enough to hold 15 characters max, so if a filename
+    * has 16 characters, then that means there are two filename entries. The first
+    * entry contains 15 characters, the second entry contains the 16th character. */
+   int numOfFilenameEntries = (streamExtEntry->NameLength >> 4) + 1;
+
+   // Check if the file has a FirstCluster. If the value is zero, then there is no cluster or Fat chain.
+   if(streamExtEntry->FirstCluster != 0)
+   {
+      /* Check if NoFatChain is false (equal to 0) to determine to clear the FAT chain
+       * or just clear a single cluster */
+      if(!streamExtEntry->NoFatChain)
+      {
+         clearFATChainAndData(fp, fd, file->FAT, clustInfo, streamExtEntry->FirstCluster, allocBitMap);
+      }
+      else // there is only one cluster of file data
+      {
+         clearCluster(fd, fp, streamExtEntry->FirstCluster, clustInfo, allocBitMap);
+      }
+   }
+
+   /* turnOffInUseBits starts at the FileAndDirEntry, and turns off InUse bits
+    * of all directory entries until it hits the last FileNameEntry. */
+   turnOffInUseBits(fd, fp, FileDirEntry, numOfFilenameEntries);
+
+   return 0;
 }
 
-void printDirectory(GenericDirectoryStruct *GDS, void *fp, int clustHeapOffs, int bytesPerSector, int sectorsPerCluster, int dirLevel)
+/* Prints the entire directory list of the files in the exFAT image file */
+void printAllDirectoriesAndFiles(fileInfo *file)
 {
-    int i = 0;
-    while (GDS[i].EntryType)
-    {
-        // Checks if if current GDS is FileAndDirectoryEntry (0x85)
-        // and the next GenericDirectoryStructure (i+1) is a StreamExtensionEntry (0xc0)
-        // and the one after that (i+2) is the FileNamEntry (0xc1)
-        if (GDS[i].InUse && GDS[i].EntryType == 0x85 && GDS[i+1].EntryType == 0xc0 && GDS[i+2].EntryType == 0xc1)
-        {
-            FileAttributes *fileAttributes = (FileAttributes *)((void *)&GDS[i] + FILE_ATTRIBUTE_OFFSET);
-            StreamExtensionEntry *streamExtEntry = (StreamExtensionEntry *)&GDS[i+1];
-            FileNameEntry *fileNameEntry = (FileNameEntry *)&GDS[i+2];
+   Main_Boot *MB = file->mainBoot;
+   void *fp = (void *)file->mainBoot;
 
-            printName( (char *)fileNameEntry->FileName, streamExtEntry->NameLength, dirLevel );
+   // Contains information about cluster/sector size and offset location
+   ClusterInfo clustInfo = {MB->ClusterHeapOffset, file->SectorSize, file->SectorsPerCluster,
+                            file->SectorSize * file->SectorsPerCluster};
 
-            // If the attribute of the file is a directory, then recursively call this function to print its
-            // contents, using its corresponding cluster, and increasing the directory level
-            if (fileAttributes->Directory)
-            {
-                GenericDirectoryStruct *subGDS = FIND_CLUSTER(streamExtEntry->FirstCluster, fp, clustHeapOffs,
-                                                              bytesPerSector, sectorsPerCluster);
-                printDirectory(subGDS, fp, clustHeapOffs, bytesPerSector, sectorsPerCluster, dirLevel+1);
-            }
-        }
+   // Goes to the first directory entry entry
+   GDS_t *GDS = findCluster(MB->FirstClusterOfRootDirectory, fp, clustInfo);
 
-        i++;
-    }
-}
-
-void printAllDirectoriesAndFiles(void *fp)
-{
-    Main_Boot *MB = (Main_Boot *)fp;
-    int bytesPerSector = 2 << (MB->BytesPerSectorShift - 1);
-    int sectorsPerCluster = 2 << (MB->SectorsPerClusterShift - 1);
-
-    // directory
-    GenericDirectoryStruct *GDS = FIND_CLUSTER(MB->FirstClusterOfRootDirectory, fp, MB->ClusterHeapOffset,
-                                               bytesPerSector, sectorsPerCluster);
-
-    printDirectory(GDS, fp, MB->ClusterHeapOffset, bytesPerSector, sectorsPerCluster, 1);
+   // Prints the directory listing of the exFAT image
+   printDirectory(GDS, fp, clustInfo, START_DIR_LVL);
 }

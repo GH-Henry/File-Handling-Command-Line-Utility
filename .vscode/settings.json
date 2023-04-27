@@ -23,6 +23,8 @@
         "initializer_list": "c",
         "utility": "c",
         "stdio.h": "c",
-        "routines.h": "c"
+        "routines.h": "c",
+        "directoryextfat.h": "c",
+        "extfat.h": "c"
     }
 }

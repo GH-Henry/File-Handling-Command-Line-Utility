@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "util.h"
 #include "extfat.h"
-#include "copyExtfat.h"
+#include "directoryExtfat.h"
 #include "routines.h"
 
 void freeFileInfoStruct(fileInfo *file)
@@ -42,12 +43,7 @@ fileInfo initFileInfoStruct(char *fileName)
 
    file.size = statbuf.st_size; // add size to the thing
 
-   void *fp = (void *)mmap(NULL,
-                           file.size,
-                           PROT_READ,
-                           MAP_PRIVATE,
-                           file.fd,
-                           0); // note the offset
+   void *fp = (void *)mmap(NULL, file.size, PROT_READ | PROT_WRITE, MAP_PRIVATE, file.fd, 0);
 
    if (fp == (void *)-1)
    {
@@ -63,7 +59,10 @@ fileInfo initFileInfoStruct(char *fileName)
    
    void *fp_ptr = (void*)(intptr_t)fp;
    file.backupBoot = (Main_Boot *)(fp_ptr + 12 * bytesPerSector);
+
    file.SectorSize = bytesPerSector;
+   file.SectorsPerCluster = 2 << (MB->SectorsPerClusterShift - 1);
+
    file.FAT = (uint32_t *)(fp_ptr + (file.mainBoot->FatOffset * bytesPerSector));
    file.fileName = fileName;
 

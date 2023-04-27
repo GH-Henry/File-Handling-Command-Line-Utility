@@ -29,20 +29,13 @@ int mmapCopy(fileInfo *inputFileInfo, char *outputFilename) // Function that map
    }
 
    size_t size = inputFileInfo->size;
-   void *source;
+   void *source = (void *)inputFileInfo->mainBoot;
    void *destination;
    
    int fout = open(outputFilename, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
    if (fout < 0) //Error Checking
    {
       perror("OutputFile");
-      return -1;
-   }
-
-   source = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_PRIVATE, inputFileInfo->fd, 0); //Passing in the read file
-   if (source == MAP_FAILED) //Error Checking
-   {
-      perror("Map failed");
       return -1;
    }
 
@@ -57,7 +50,7 @@ int mmapCopy(fileInfo *inputFileInfo, char *outputFilename) // Function that map
 
    printf("the size is %ld\n", size);
    
-   memcpy(destination, source, size);     //Map memory over
+   memcpy(destination, source, size);     //Copy data over
 
    if (msync(destination, size, MS_SYNC) == -1) 
    {
@@ -65,11 +58,6 @@ int mmapCopy(fileInfo *inputFileInfo, char *outputFilename) // Function that map
         return -1;
    }
 
-   if (munmap(source, size) < 0)
-   {
-      perror("unmap");
-      return -1;
-   }
    if (munmap(destination, size) < 0)
    {
       perror("unmap");
