@@ -12,7 +12,7 @@ void turnOffCorrespondingBitInMap(int fd, void *fp, int N, uint8_t *allocBitMap)
     * Bit 7 - cluster 9
     * Essentially, each byte references up to 8 clusters.
     * 
-    * This means that if cluster 20 is being freed and since the allocBitMap
+    * This means that if cluster 20 is being freed and the because allocBitMap
     * is a pointer to a byte, it needs to be "indexed" to the right section
     * of the bitmap.
     * N will also be used to set up a bitmask to properly flip the
@@ -33,7 +33,7 @@ void turnOffCorrespondingBitInMap(int fd, void *fp, int N, uint8_t *allocBitMap)
    /* If N = 2, then the 0th bit needs to be turned off because 
     * Bit 0 - cluster 2, hence the -2 on N.
     *
-    * Left bit shift is to ensure the correct bit will be flipped by XOR, 
+    * Left bitshift is to ensure the correct bit will be flipped by XOR, 
     * so if cluster 3 is cleared, then the 1st bit needs to be flipped in the bit mask.
     * cluster 7, then the 5th bit will need to be flipped.
     * 
@@ -41,18 +41,19 @@ void turnOffCorrespondingBitInMap(int fd, void *fp, int N, uint8_t *allocBitMap)
     * used against 0b11111111, then it will always turn off a specific bit, 
     * creating the proper bitmask to use against the allocBitMap.
     * 
-    * bitwise AND is used to ALWAYS turn off a specific bit. 
+    * bitwise AND is used to always turn off a specific bit. 
     * With the current bitmask, it will leave the other bits in allocBitMap untouched,
     * and flip only the bit that is 0 in the mask. */
    *allocBitMap &= (0b11111111 ^ (1 << (N - 2)));
+
    write(fd, allocBitMap, 1); // Write the changed value into the image file
 }
 
 /* Turns the InUse bit off of FileNameEntries and empties the data. */
 void clearFileNameData(int fd, void *fp, FileNameEntry *firstEntry, int numOfFilenameEntries)
 {
-   // An empty FileNameEntry used to copy over into the image file to
-   // empty out the name of the file.
+   /* An empty FileNameEntry used to copy over into the image file to
+    * empty out the name of the file. */
    FileNameEntry emptyFileNameEntry = {};
 
    // FileName is 0xc1, the value is part of an enum defined in directoryEntryInfo.h

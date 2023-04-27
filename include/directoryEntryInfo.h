@@ -1,7 +1,7 @@
 #pragma once
 /* This file contains struct, enum, and union definitions of what is used
  * to manipulate and find files in the extfat program.
- * Primarily used in directoryExtfat.c and directoryHelperFn.c */
+ * Primarily used in directoryExtfat and directoryHelperFn */
 
 #include "extfat.h"
 
