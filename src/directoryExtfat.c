@@ -144,23 +144,27 @@ void printAllDirectoriesAndFiles(void *fp)
     printDirectory(GDS, fp, MB->ClusterHeapOffset, bytesPerSector, sectorsPerCluster, 1);
 }
 
-void printcontent(GenericDirectoryStruct *GDS, void *fp, int clustHeapOffs, int bytesPerSector, int sectorsPerCluster, char *Filename, char *output)
+char printcontent(GenericDirectoryStruct *GDS, void *fp, int clustHeapOffs, int bytesPerSector, int sectorsPerCluster, char *Filename, char *output)
 {
     int i = 0;
     char Filenameinimage[100] = "";
     char *c1ptr = NULL;
+    char resultcase = 'i';
+    
+    
 
     while (GDS[i].EntryType)
     {
         // Checks if if current GDS is FileAndDirectoryEntry (0x85)
         // and the next GenericDirectoryStructure (i+1) is a StreamExtensionEntry (0xc0)
         // and the one after that (i+2) is the FileNamEntry (0xc1)
+         
         if (GDS[i].InUse && GDS[i].EntryType == 0x85 && GDS[i + 1].EntryType == 0xc0 && GDS[i + 2].EntryType == 0xc1)
         {
             FileAttributes *fileAttributes = (FileAttributes *)((void *)&GDS[i] + FILE_ATTRIBUTE_OFFSET);
             StreamExtensionEntry *streamExtEntry = (StreamExtensionEntry *)&GDS[i + 1];
-            if (fileAttributes->Directory != 1)
-            {
+            memset(Filenameinimage,'\0', sizeof(Filenameinimage));
+        
                 c1ptr = (char *)&(GDS[i + 2]);
                 c1ptr += 2;
                 for (int j = 0; j < streamExtEntry->NameLength; j++)
@@ -169,11 +173,13 @@ void printcontent(GenericDirectoryStruct *GDS, void *fp, int clustHeapOffs, int 
 
                     c1ptr += 2;
                 }
-                // printf("(%s)(%s)",Filename, Filenameinimage);
-            }
-            if (strcmp(Filename, Filenameinimage) == 0)
+                 //printf("(%s)(%s)",Filename, Filenameinimage);
+            
+            
+            if (strcmp(Filename, Filenameinimage) == 0 && fileAttributes->Directory != 1)
             {
-                printf("found");
+                //printf("File found");
+                resultcase = 'f';   //indicate the file is found
                 FILE *fpout = fopen(output, "w");
                 GenericDirectoryStruct *contentcluster = FIND_CLUSTER(streamExtEntry->FirstCluster, fp, clustHeapOffs,
                                                                       bytesPerSector, sectorsPerCluster);
@@ -191,18 +197,28 @@ void printcontent(GenericDirectoryStruct *GDS, void *fp, int clustHeapOffs, int 
                     w++;
                 }
                 fclose(fpout);
+                return resultcase;
             }
+            if (strcmp(Filename, Filenameinimage) == 0 && fileAttributes->Directory == 1)
+            {
+                //printf("Try to open a directory\n");
+                resultcase = 'd';    //indicate try to open a directory 
+                return resultcase;
+            }
+            
             // If the attribute of the file is a directory, then recursively call this function to print its
             // contents, using its corresponding cluster, and increasing the directory level
             if (fileAttributes->Directory)
             {
                 GenericDirectoryStruct *subGDS = FIND_CLUSTER(streamExtEntry->FirstCluster, fp, clustHeapOffs,
                                                               bytesPerSector, sectorsPerCluster);
-                printcontent(subGDS, fp, clustHeapOffs, bytesPerSector, sectorsPerCluster, Filename, output);
+                resultcase = printcontent(subGDS, fp, clustHeapOffs, bytesPerSector, sectorsPerCluster, Filename, output);
             }
         }
         i++;
     }
+    return resultcase;
+
 }
 
 
@@ -211,12 +227,25 @@ void printfilecontent(void *fp, char *Filename, char *outputfilename)
     Main_Boot *MB = (Main_Boot *)fp;
     int bytesPerSector = 2 << (MB->BytesPerSectorShift - 1);
     int sectorsPerCluster = 2 << (MB->SectorsPerClusterShift - 1);
-
+    char result;
     // directory
     GenericDirectoryStruct *GDS = FIND_CLUSTER(MB->FirstClusterOfRootDirectory, fp, MB->ClusterHeapOffset,
                                                bytesPerSector, sectorsPerCluster);
-
     // printf("1(%s)", Filename);
 
-    printcontent(GDS, fp, MB->ClusterHeapOffset, bytesPerSector, sectorsPerCluster, Filename, outputfilename);
+    result = printcontent(GDS, fp, MB->ClusterHeapOffset, bytesPerSector, sectorsPerCluster, Filename, outputfilename);
+    switch (result)
+    {
+        case 'f':
+        printf("File found\n");
+        break;
+        case 'd':
+        printf("Trying to open directory, no action will be done\n");
+        break;
+        case 'i':
+        printf("Not found\n");
+        break;
+        default:
+        printf("Someting wrong with printcontent\n");
+    }
 }
