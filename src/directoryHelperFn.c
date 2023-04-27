@@ -12,7 +12,7 @@ void turnOffCorrespondingBitInMap(int fd, void *fp, int N, uint8_t *allocBitMap)
     * Bit 7 - cluster 9
     * Essentially, each byte references up to 8 clusters.
     * 
-    * This means that if cluster 20 is being freed and the because allocBitMap
+    * This means that if cluster 20 is being freed and because allocBitMap
     * is a pointer to a byte, it needs to be "indexed" to the right section
     * of the bitmap.
     * N will also be used to set up a bitmask to properly flip the
@@ -23,7 +23,8 @@ void turnOffCorrespondingBitInMap(int fd, void *fp, int N, uint8_t *allocBitMap)
    {
       allocBitMap++; // Moves allocBitMap to the next byte
 
-      // Decreases the value of N by 8, since we've moved 8 bits forward in the bitmap
+      /* Decreases the value of N by 8, since we've moved 8 bits forward in the bitmap
+       * which is like shifting the starting cluster by 8 */
       N -= 8;
    }
 
@@ -44,7 +45,7 @@ void turnOffCorrespondingBitInMap(int fd, void *fp, int N, uint8_t *allocBitMap)
     * bitwise AND is used to always turn off a specific bit. 
     * With the current bitmask, it will leave the other bits in allocBitMap untouched,
     * and flip only the bit that is 0 in the mask. */
-   *allocBitMap &= (0b11111111 ^ (1 << (N - 2)));
+   *allocBitMap &= ( 0b11111111 ^ (1 << (N - 2)) );
 
    write(fd, allocBitMap, 1); // Write the changed value into the image file
 }
@@ -149,7 +150,7 @@ GDS_t *findFileAndDirEntry(GDS_t *GDS, char *fileToFind, void *fp, ClusterInfo c
           * for the target file. */
          if(strcmp(currFilename, fileToFind) == 0)
          {
-            printf("Found %s\n", currFilename);
+            printf("Found %s.\n", currFilename);
             returnVal = &GDS[i];
          }
          else if(fileAttributes->Directory)
@@ -195,7 +196,7 @@ void clearCluster(int fd, void *fp, int N, ClusterInfo clustInfo, uint8_t *alloc
       write(fd, &zero, 1);
    }
 
-   turnOffCorrespondingBitInMap(fd, fp, N, allocBitMap);   
+      turnOffCorrespondingBitInMap(fd, fp, N, allocBitMap);   
 }
 
 /* Clears the FAT chain starting at FAT[index] along with the corresponding cluster data.

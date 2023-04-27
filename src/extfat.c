@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
       }
    }
 
-   if(arguments.flags[copy] == true && arguments.outFile != NULL)
+   if(arguments.flags[copy] == true)
    {
       printf("\n=== Copying %s to %s ===\n", inputFileInfo.fileName, arguments.outFile);
       if( mmapCopy(&inputFileInfo, arguments.outFile) != -1 )
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
          {
             case -1:
                // Target file does not exist
-               printf("Unable to find %s\n", arguments.delFile);
+               printf("Unable to find %s.\n", arguments.delFile);
                break;
             case  0:
                // Target file found and deleted

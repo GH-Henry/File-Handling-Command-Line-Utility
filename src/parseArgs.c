@@ -65,5 +65,6 @@ argument_struct_t parseArgs(int argc, char *argv[])
    {
       argStruct.outFile = argStruct.inFile;
    }
+
    return argStruct;
 }
