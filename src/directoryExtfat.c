@@ -82,37 +82,41 @@ GDS_t *findFileAndDirEntry(GDS_t *GDS, char *fileToFind, void *fp, ClusterInfo c
 /* clears the data in the Nth cluster in an exFAT image file */
 void clearCluster(int fd, void *fp, int N, ClusterInfo clustInfo)
 {
-   void *cluster = findCluster(N, fp, clustInfo);
+   void *cluster = findCluster(N, fp, clustInfo); // Gets cluster N
 
-   uint8_t zero = 0;
-   lseek(fd, (size_t)(cluster - fp), SEEK_SET);
+   uint8_t zero = 0; // Byte of data to write
+   lseek(fd, (size_t)(cluster - fp), SEEK_SET); // Seeks to cluster N in the image file
 
+   // Clear the entire cluster to zeros
    for(size_t i = 0; i < clustInfo.bytesPerCluster; i++)
    {
       write(fd, &zero, 1);
    }
 }
 
-/* clears the FAT chain starting at FAT[index] along with clearing the cluster data */
-void clearFATChainAndData(void *fp, int fd, FATChain *FAT, ClusterInfo clustInfo, uint32_t index, size_t offset)
+/* clears the FAT chain starting at FAT[index] along with clearing the cluster data. */
+void clearFATChainAndData(void *fp, int fd, FATChain *FAT, ClusterInfo clustInfo, uint32_t index)
 {
-   uint32_t temp = index;
+   // Number of bytes from the start of the file to the FAT.
+   size_t offset = (size_t)((void *)FAT - fp);
+
+   uint32_t temp = index; // Used to remember the next FAT location to got to
 
    do
    {
-      lseek(fd, offset + index*sizeof(FATChain), SEEK_SET);
-      temp = FAT[index];
-      FAT[index] = 0x00000000;
-      write(fd, &FAT[index], sizeof(FATChain));
-      clearCluster(fd, fp, index, clustInfo);
-      index = temp;
+      lseek(fd, offset + index*sizeof(FATChain), SEEK_SET); // Seeks to FAT[index]
+      temp = FAT[index]; // Stores the current value
+      FAT[index] = 0x00000000; // Wipes the FAT[index]
+      write(fd, &FAT[index], sizeof(FATChain)); // Writes wiped value into the image file
+      clearCluster(fd, fp, index, clustInfo); // Clears the corresponding cluster
+      index = temp; // sets up for the next FAT entry in the chain
    }
    while (index != 0xFFFFFFFF);
 }
 
 /* Turns the InUse bit off of FileNameEntries and empties the data. offset is
- * the offset of the first FileNameEntry. */
-void clearFileNameData(int fd, int numOfFilenameEntries, size_t offset)
+ * the number of bytes from the start to the first FileNameEntry. */
+void clearFileNameData(int fd, void *fp, FileNameEntry *firstEntry, int numOfFilenameEntries)
 {
    // An empty FileNameEntry used to copy over into the image file to
    // empty out the name of the file.
@@ -122,7 +126,8 @@ void clearFileNameData(int fd, int numOfFilenameEntries, size_t offset)
    emptyFileNameEntry.EntryType = FileName;
    emptyFileNameEntry.InUse = 0; // Turns off the InUse bit
 
-   lseek(fd, offset, SEEK_SET); // Move to the target FileNameEntry in the image
+   // Move to the target FileNameEntry in the image
+   lseek(fd, (off_t)((void *)firstEntry - fp), SEEK_SET);
  
    for(int i = 0; i < numOfFilenameEntries; i++)
    {
@@ -133,18 +138,20 @@ void clearFileNameData(int fd, int numOfFilenameEntries, size_t offset)
 
 /* Flips the InUseBits of DirectoryEntries until it encounters an entry where InUse is off
  * Should be used after clearing FileNameData to ensure it does not loop indefinately. */
-void turnOffInUseBits(int fd, GDS_t *GDS, size_t offset)
+void turnOffInUseBits(int fd, void *fp, GDS_t *GDS)
 {
-   lseek(fd, offset, SEEK_SET);
+   // Seek to the directory struct in the file
+   lseek(fd, (off_t)((void *)GDS - fp), SEEK_SET);
+
    int i = 0;
    do
    {
-      GDS[i].InUse = 0;
-      write(fd, &GDS[i].EntryType, 1);
-      i++;
+      GDS[i].InUse = 0; // Set the InUse bit to off
+      write(fd, &GDS[i].EntryType, 1); // Write it into the file
+      i++; // Move to the next directory struct
 
-      // shifts to the next directory struct, -1 is there
-      // to account for the offset from the writing a byte
+      // shifts to the next directory struct in the file, 
+      // -1 is there to account for the offset from writing a byte
       lseek(fd, sizeof(GDS_t) - 1, SEEK_CUR);
    }
    while(GDS[i].InUse);
@@ -154,17 +161,18 @@ void turnOffInUseBits(int fd, GDS_t *GDS, size_t offset)
  * depending on the dirLevel. */
 void printFileName(char *ptrToFilename, int lengthOfName, int dirLevel)
 {
-    // Prints the proper number of tabs dependidng on dirLevel
-    for(int i = 0; i < dirLevel; i++)
-    {
-        printf("\t");
-    }
+   // Prints the proper number of tabs dependidng on dirLevel
+   for(int i = 0; i < dirLevel; i++)
+   {
+      printf("\t");
+   }
 
-    char *filename = malloc((lengthOfName + 1) * sizeof(char));
-    fetchNameFromExtFAT(filename, ptrToFilename, lengthOfName);
+   // Gets the filename from exFAT into a standard C string
+   char *filename = malloc((lengthOfName + 1) * sizeof(char));
+   fetchNameFromExtFAT(filename, ptrToFilename, lengthOfName);
 
-    printf("%s\n", filename);
-    free(filename);
+   printf("%s\n", filename);
+   free(filename);
 }
 
 /* Recursively traveres the exFAT image directory entries to print all files 
@@ -205,9 +213,9 @@ void printDirectory(GDS_t *GDS, void *fp, ClusterInfo clustInfo, int dirLevel)
 /* === Functions to be used by the extfat.c ===*/
 
 /* Deletes a target file in the exFAT image.
- * returns 0  when the file exists and is deleted 
+ * returns  0 when the file exists and is deleted 
  * returns -1 if the file is not found
- * returns 1  if the file is a directory (does not delete it) */
+ * returns  1 if the file is a directory (does not delete it) */
 int deleteFileInExfat(fileInfo *file, char *fileToDelete)
 {
    Main_Boot *MB = file->mainBoot;
@@ -216,14 +224,13 @@ int deleteFileInExfat(fileInfo *file, char *fileToDelete)
    // Contains information about cluster/sector size and offset location
    ClusterInfo clustInfo = {MB->ClusterHeapOffset, file->SectorSize, file->SectorsPerCluster,
                             file->SectorSize * file->SectorsPerCluster};
-   size_t offsetToFAT = (size_t)((void*)file->FAT - (void*)file->mainBoot);
 
    // Goes to the first directory entry entry
    GDS_t *GDS = findCluster(MB->FirstClusterOfRootDirectory, fp, clustInfo);
 
    // Finds the FileAndDirEntry (0x85) of the fileToDelete
    GDS = findFileAndDirEntry(GDS, fileToDelete, fp, clustInfo);
-   FileAttributes *fileAttributes = (FileAttributes *)((void *)&GDS + FILE_ATTRIBUTE_OFFSET);
+   FileAttributes *fileAttributes = (FileAttributes *)((void *)GDS + FILE_ATTRIBUTE_OFFSET);
 
    // If GDS is NULL, the findFileAndDirEntry failed to find the file (return -1)
    // If the entry is a directory, then do not delete it and return 1
@@ -248,9 +255,6 @@ int deleteFileInExfat(fileInfo *file, char *fileToDelete)
     * entry contains 15 characters, the second entry contains the 16th character. */
    int numOfFilenameEntries = (streamExtEntry->NameLength >> 4) + 1;
 
-   size_t offsetToFirstDirEntry = (size_t)((void *)GDS - (void *)file->mainBoot);
-   size_t offsetToFileName = (size_t)((void *)fileNameEntry - (void *)file->mainBoot);
-
    // Check if the file has a FirstCluster. If the value is zero, then there is no cluster or Fat chain.
    if(streamExtEntry->FirstCluster != 0)
    {
@@ -258,7 +262,7 @@ int deleteFileInExfat(fileInfo *file, char *fileToDelete)
        * or just clear a single cluster */
       if(!streamExtEntry->NoFatChain)
       {
-         clearFATChainAndData(fp, file->fd, file->FAT, clustInfo, streamExtEntry->FirstCluster, offsetToFAT);
+         clearFATChainAndData(fp, file->fd, file->FAT, clustInfo, streamExtEntry->FirstCluster);
       }
       else // there is only one cluster of file data
       {
@@ -272,8 +276,8 @@ int deleteFileInExfat(fileInfo *file, char *fileToDelete)
     * Since the order of DirEntries is FileAndDir(0x85), then StreamExtEntry (0xc0)
     * then the FileNameEntries(0xc1), since clearFileName sets the FileNameEntry bits off,
     * turnOffInUseBits will turn off the InUse for FileAndDir and StreamExtEntry, then stop. */
-   clearFileNameData(file->fd, numOfFilenameEntries, offsetToFileName);
-   turnOffInUseBits(file->fd, GDS, offsetToFirstDirEntry);
+   clearFileNameData(file->fd, fp, fileNameEntry, numOfFilenameEntries);
+   turnOffInUseBits(file->fd, fp, GDS);
 
    return 0;
 }

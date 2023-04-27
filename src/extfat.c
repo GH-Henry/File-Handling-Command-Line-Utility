@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
                printf("%s has been deleted.\n", arguments.delFile);
                break;
             case 1:
-               printf("Error: %s is a directory, unable to delete.\n", arguments.delFile);
+               printf("%s is a directory, unable to delete.\n", arguments.delFile);
                break;
          }
       }
