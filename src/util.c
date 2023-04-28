@@ -63,7 +63,8 @@ fileInfo initFileInfoStruct(char *fileName)
    return file;
 }
 
-/* Unmaps the image file from memory and closes the corresponding file discriptor */
+/* Unmaps the image file from memory and closes the corresponding file discriptor 
+ * along with setting everything in the struct to zero/NULL */
 void freeFileInfoStruct(fileInfo *file)
 {
    // unmap the file
@@ -78,5 +79,6 @@ void freeFileInfoStruct(fileInfo *file)
    {
       perror("close");
    }
-   file->fd = 0;
+   
+   memset(file, 0, sizeof(fileInfo)); // set everything to zero/NULL
 }
