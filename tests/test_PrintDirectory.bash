@@ -6,9 +6,7 @@ echo "Directory Test"
 
 # Display the directory of the disk image
 
-sudo umount /dev/loop2
-sudo losetup -d /dev/loop2
-rm -rf /tmp/d
+bash ./tests/clean_up.bash
 bash ./examples/create_image.bash
 mkdir /tmp/d/dir1
 touch /tmp/d/dir1/file

@@ -25,14 +25,19 @@ all:mmap fread munit_test extfat crc_example
 extfat: ${CSRCS} src/extfat.c
 	${CC} ${CFLAGS} ${CINCS} -o $@ $^
 
+# example code
+mmap:examples/mmap.c  common/routines.c
+	${CC} ${CFLAGS} ${CINCS} -o $@ $^
+
+fread:examples/fread.c  
+	${CC} ${CFLAGS} ${CINCS} -o $@ $^
+
+crc_example:examples/crc_example.c
+	${CC} ${CFLAGS} ${CINCS} -o $@ $^ -lz
+
 # unit tests
 munit_test: ${TESTSRC} ${CSRCS}
 	${CC} ${CFLAGS} -I./unit_tests/munit_example ${CINCS} -o $@ $^
-
-# this test needs to be deleted once we get some real tests
-# for the problem at hand
-#munit_example:unit_tests/munit
-#	${CC} ${CFLAGS} unit_tests/munit_example -I./unit_tests/munit_example ${CINCS} -o $@ $^
 
 # requirements tests
 system_tests: extfat
@@ -64,24 +69,14 @@ test_MultipleFlags: extfat
 
 test_NoCopyDest: extfat 
 	bash tests/test_NoCopyDest.bash
-# example code
-mmap:examples/mmap.c  common/routines.c
-	${CC} ${CFLAGS} ${CINCS} -o $@ $^
-
-fread:examples/fread.c  
-	${CC} ${CFLAGS} ${CINCS} -o $@ $^
-
-crc_example:examples/crc_example.c
-	${CC} ${CFLAGS} ${CINCS} -o $@ $^ -lz
 
 # run tests
-tests: run_unit_tests system_tests
+tests: run_unit_tests run_tests
 
-run_unit_tests:
+run_unit_tests: munit_test
 	./munit_test
 
-run_tests:
-	bash tests/system_tests.bash
+run_tests: system_tests
 
 clean:
-	-rm -f mmap fread extfat crc_example output munit_test test_output.bin overwrite.c
+	-rm -f mmap fread extfat crc_example munit_test

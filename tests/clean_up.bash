@@ -1,11 +1,11 @@
 #!/bin/bash
 if [ -d "/tmp/d" ] 
 then
-   sudo umount /dev/loop2
+   sudo umount -q /tmp/d
    sudo losetup -d /dev/loop2
    rm -rf /tmp/d
 fi
-if [ -d "test.image" ] 
+if [ -f "test.image" ] 
 then
    rm test.image
 fi
