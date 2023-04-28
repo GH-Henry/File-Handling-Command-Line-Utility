@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "copyExtfat.h"
+#include "./../include/copyExtfat.h"
 #include "util.h"
 
 /* Opens a file, and writes a at the end of the file (specified by offset). 
