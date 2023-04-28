@@ -46,8 +46,8 @@ GDS_t *findFileAndDirEntry(GDS_t *GDS, char *targetFile, void *fp, ClusterInfo *
     GDS_t *backupVal = NULL;
 
     int i = 0;
-    /* While loop keeps running until the target file is found and
-     * it is not a directory, or until there are no more entries. */
+    /* While loop keeps running until the target file that is not a 
+     * directory is found, or until there are no more entries. */
     while (GDS[i].EntryType && returnVal == NULL)
     {
         /* Checks if if current GDS is FileAndDirectoryEntry (FileDir - 0x85)
@@ -66,16 +66,14 @@ GDS_t *findFileAndDirEntry(GDS_t *GDS, char *targetFile, void *fp, ClusterInfo *
             // Checks to see if the filename is equal to the targetFile
             if (strcmp(currFilename, targetFile) == 0)
             {
-                /* If the file is a directory, recursively call this function to see if a
-                 * non-directory file with the targetName exists */
+                // If the file is a directory, save the entry in backupVal
                 if (fileAttributes->Directory)
                 {
-                    backupVal = &GDS[i]; // Found a directory version of the file, set up backupVal
-                    GDS_t *subGDS = findCluster(streamExtEntry->FirstCluster, fp, clustInfo);
-                    returnVal = findFileAndDirEntry(subGDS, targetFile, fp, clustInfo);
+                    backupVal = &GDS[i];
                 }
-                else // The file is not a directory, and prepare to leave the loop
+                else // The file is not a directory
                 {
+                    // Save the entry in returnVal, and prepare to leave the loop
                     returnVal = &GDS[i];
                 }
             }
@@ -85,7 +83,24 @@ GDS_t *findFileAndDirEntry(GDS_t *GDS, char *targetFile, void *fp, ClusterInfo *
             if (fileAttributes->Directory)
             {
                 GDS_t *subGDS = findCluster(streamExtEntry->FirstCluster, fp, clustInfo);
-                returnVal = findFileAndDirEntry(subGDS, targetFile, fp, clustInfo);
+                subGDS = findFileAndDirEntry(subGDS, targetFile, fp, clustInfo);
+                FileAttributes *subGDSAttributes = (FileAttributes *)((void *)subGDS + FILE_ATTRIBUTE_OFFSET);
+
+                /* If subGDS is NULL then there was not a filename match found, 
+                 * otherwise subGDS is the FileAndDirectoryEntry (FileDir - 0x85). 
+                 *
+                 * If subGDS is NOT a directory, then set returnVal equal to subGDS, and leave the loop */ 
+                if (subGDS != NULL && !subGDSAttributes->Directory)
+                {
+                    returnVal = subGDS;
+                }
+                else if (backupVal == NULL) // if backupVal is NULL, set it equal to result of the recursion
+                {
+                    /* Note: If subGDS is NULL, then nothing changes.
+                     * If subGDS is not NULL then a filename match was found, and 
+                     * subGDS is a directory. Therefore, set backupVal equal to subGDS */
+                    backupVal = subGDS;
+                }
             }
 
             free(currFilename);
