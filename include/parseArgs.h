@@ -18,8 +18,8 @@ typedef struct
     char *inFile;  // input file
     char *outFile; // output file
     char *delFile; // file to delete 
+    char *extractFile; // file to extract
     bool flags[NUM_FLAGS];
-    char *extractFile; 
 } argument_struct_t;
 
 void printHelp();

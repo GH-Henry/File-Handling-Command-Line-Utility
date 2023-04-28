@@ -19,10 +19,10 @@ typedef uint32_t FATChain; // Each entry in the FAT is 4 bytes
 // http://elm-chan.org/docs/exfat_e.html
 enum entryTypeCodes
 {
-    AllocBitM = 0x81,
-    FileDir   = 0x85,
-    StreamExt = 0xc0,
-    FileName  = 0xc1
+    AllocBitM = 0x81, // Allocation bitmap entry
+    FileDir   = 0x85, // File and Directory entry
+    StreamExt = 0xc0, // Stream Extension  entry
+    FileName  = 0xc1  // File Name entry
 };
 
 // The EntryType union and GenericDirectoryStruct are based on the directories defined here

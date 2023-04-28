@@ -61,6 +61,11 @@ argument_struct_t parseArgs(int argc, char *argv[])
                argStruct.delFile = NULL;
                argStruct.flags[deleteFile] = true;
             }
+            else if(optopt == 'x')
+            {
+               argStruct.extractFile = NULL;
+               argStruct.flags[extractFile] = true;
+            }
             break;
       }
    }
