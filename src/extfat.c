@@ -39,7 +39,8 @@ int main(int argc, char *argv[])
         }
         else
         {
-            printf("Main Boot and Backup Boot checksums are not the same\n");
+            printf("Main Boot and Backup Boot checksums are NOT the same\n");
+            return EXIT_FAILURE;
         }
     }
     /* ===== End of Verify (-v) ===== */
