@@ -6,7 +6,8 @@ echo "Directory Test"
 
 # Display the directory of the disk image
 
-sudo umount /tmp/d
+sudo umount /dev/loop2
+sudo losetup -d /dev/loop2
 rm -rf /tmp/d
 bash ./examples/create_image.bash
 mkdir /tmp/d/dir1

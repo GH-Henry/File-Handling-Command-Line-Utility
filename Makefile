@@ -19,15 +19,13 @@ CSRCS += common/routines.c
 CINCS  = -I./include
 TESTSRC = unit_tests/unitTests.c unit_tests/munit/munit.c
 
-all:mmap fread unit_tests extfat crc_example
+all:mmap fread munit_test extfat crc_example
 
 # the utility that is a focus of this project
 extfat: ${CSRCS} src/extfat.c
 	${CC} ${CFLAGS} ${CINCS} -o $@ $^
 
 # unit tests
-unit_tests: munit_test
-
 munit_test: ${TESTSRC} ${CSRCS}
 	${CC} ${CFLAGS} -I./unit_tests/munit_example ${CINCS} -o $@ $^
 
@@ -79,11 +77,11 @@ crc_example:examples/crc_example.c
 # run tests
 tests: run_unit_tests system_tests
 
-run_unit_tests: munit_example
-	./munit_example
+run_unit_tests:
+	./munit_test
 
 run_tests:
-	echo "here i would be running the requirements tests"
+	bash tests/system_tests.bash
 
 clean:
-	-rm -f mmap fread munit_example extfat crc_example output munit_test test_output.bin overwrite.c
+	-rm -f mmap fread extfat crc_example output munit_test test_output.bin overwrite.c

@@ -31,7 +31,7 @@ else
     result=1
 fi
 #Now I mess up the image so main and backup boot should be differnet now
-gcc -Wall overwrite.c
+gcc -Wall examples/overwrite.c
 ./a.out
 output2=$(./extfat -v -c -d -i test.image -o test2.image)
 errorMessage="Main Boot and Backup Boot checksums are not the same."
@@ -40,5 +40,6 @@ if [[ $output2 == *"$errorMessage"* ]]; then
 else
     result=1
 fi
+rm ./a.out
 echo "Result is $result"
 exit $result

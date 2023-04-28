@@ -9,7 +9,7 @@ else
     result=1
 fi
 
-gcc -Wall overwrite.c
+gcc -Wall examples/overwrite.c
 ./a.out
 ./extfat -i test.image -v
 output=$(./extfat -i test.image -v)
@@ -20,5 +20,6 @@ if [[ $output == *"$errorMessage"* ]]; then
 else
     result=1
 fi
+rm ./a.out
 echo "Result is $result "
 exit $result

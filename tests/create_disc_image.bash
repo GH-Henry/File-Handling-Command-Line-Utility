@@ -9,3 +9,4 @@ sudo mount /dev/loop2 /tmp/d
 
 mkdir /tmp/d/dir1
 touch /tmp/d/dir1/file1
+sync
