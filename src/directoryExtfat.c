@@ -91,3 +91,107 @@ void printAllDirectoriesAndFiles(fileInfo *file)
    // Prints the directory listing of the exFAT image
    printDirectory(GDS, fp, clustInfo, START_DIR_LVL);
 }
+
+
+char printcontent(GDS_t *GDS, void *fp, ClusterInfo clustInfo, char *Filename, char *output)
+{
+    int i = 0;
+    char Filenameinimage[100] = "";
+    char *c1ptr = NULL;
+    char resultcase = 'i';
+    
+    
+
+    while (GDS[i].EntryType)
+    {
+        // Checks if if current GDS is FileAndDirectoryEntry (0x85)
+        // and the next GDS_ture (i+1) is a StreamExtensionEntry (0xc0)
+        // and the one after that (i+2) is the FileNamEntry (0xc1)
+         
+        if (GDS[i].InUse && GDS[i].EntryType == 0x85 && GDS[i + 1].EntryType == 0xc0 && GDS[i + 2].EntryType == 0xc1)
+        {
+            FileAttributes *fileAttributes = (FileAttributes *)((void *)&GDS[i] + FILE_ATTRIBUTE_OFFSET);
+            StreamExtensionEntry *streamExtEntry = (StreamExtensionEntry *)&GDS[i + 1];
+            memset(Filenameinimage,'\0', sizeof(Filenameinimage));
+        
+                c1ptr = (char *)&(GDS[i + 2]);
+                c1ptr += 2;
+                for (int j = 0; j < streamExtEntry->NameLength; j++)
+                {
+                    Filenameinimage[j] = *c1ptr;
+
+                    c1ptr += 2;
+                }
+                 //printf("(%s)(%s)",Filename, Filenameinimage);
+            
+            
+            if (strcmp(Filename, Filenameinimage) == 0 && fileAttributes->Directory != 1)
+            {
+                //printf("File found");
+                resultcase = 'f';   //indicate the file is found
+                FILE *fpout = fopen(output, "w");
+                GDS_t *contentcluster = findCluster(streamExtEntry->FirstCluster, fp, clustInfo);
+                FileNameEntry *content = NULL;
+                int w = 0;
+
+                while (contentcluster[w].EntryType)
+                {
+                    content = (FileNameEntry *)(void *)&contentcluster[w];
+                    for (int z = 0; z < (int)sizeof(GDS_t); z++)
+                    {
+                     //   printf("%c", (*content).words[z]);
+                        fputc((*content).FileName[z], fpout);
+                    }
+                    w++;
+                }
+                fclose(fpout);
+                return resultcase;
+            }
+            if (strcmp(Filename, Filenameinimage) == 0 && fileAttributes->Directory == 1)
+            {
+                //printf("Try to open a directory\n");
+                resultcase = 'd';    //indicate try to open a directory 
+                return resultcase;
+            }
+            
+            // If the attribute of the file is a directory, then recursively call this function to print its
+            // contents, using its corresponding cluster, and increasing the directory level
+            if (fileAttributes->Directory)
+            {
+                GDS_t *subGDS = findCluster(streamExtEntry->FirstCluster, fp, clustInfo);
+                resultcase = printcontent(subGDS, fp, clustInfo, Filename, output);
+            }
+        }
+        i++;
+    }
+    return resultcase;
+}
+
+
+
+void printfilecontent(fileInfo *file, void *fp, char *Filename, char *outputfilename)
+{
+    Main_Boot *MB = (Main_Boot *)fp;
+    ClusterInfo clustInfo = {MB->ClusterHeapOffset, file->SectorSize, file->SectorsPerCluster,
+                             file->SectorSize * file->SectorsPerCluster};
+    char result;
+    // directory
+    GDS_t *GDS = findCluster(MB->FirstClusterOfRootDirectory, fp, clustInfo);
+    // printf("1(%s)", Filename);
+
+    result = printcontent(GDS, fp, clustInfo, Filename, outputfilename);
+    switch (result)
+    {
+        case 'f':
+        printf("File found\n");
+        break;
+        case 'd':
+        printf("Trying to open directory, no action will be done\n");
+        break;
+        case 'i':
+        printf("Not found\n");
+        break;
+        default:
+        printf("Someting wrong with printcontent\n");
+    }
+}

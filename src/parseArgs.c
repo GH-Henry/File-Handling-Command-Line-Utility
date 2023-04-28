@@ -25,7 +25,7 @@ argument_struct_t parseArgs(int argc, char *argv[])
 {
    argument_struct_t argStruct = {}; // Initializes everything to zero
    int opt = 0;
-   while((opt = getopt(argc, argv, "i:o::D:hcvd")) != -1)
+   while((opt = getopt(argc, argv, "i:o::x:D:hcvd")) != -1)
    {
       switch(opt)
       {
@@ -50,6 +50,10 @@ argument_struct_t parseArgs(int argc, char *argv[])
          case 'D':
             argStruct.delFile = optarg;
             argStruct.flags[deleteFile] = true;
+            break;
+         case 'x':
+            argStruct.flags[extractFile] = true;
+            argStruct.extractFile = optarg;
             break;
          case '?':
             if(optopt == 'D')

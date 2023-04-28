@@ -12,3 +12,5 @@ void printAllDirectoriesAndFiles(fileInfo *file);
  * - returns -1 if the file is not found
  * - returns 1 if the file is a directory (does not delete it) */
 int deleteFileInExfat(fileInfo *file, char *fileToDelete);
+
+void printfilecontent(void *fp, char *Filename, char *outputfilename);

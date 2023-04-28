@@ -83,6 +83,13 @@ int main(int argc, char *argv[])
       printf("\n=== Printing the directory listing of %s ===\n", inputFileInfo.fileName);
       printAllDirectoriesAndFiles(&inputFileInfo);
    }
+   
+   if(arguments.flags[extractFile] == true)
+   {
+      printf("\n Printing file content to outputfile (%s) Note if file extracted doesn't exist then output file would not be created\n", arguments.extractFile);
+     
+      printfilecontent(inputFileInfo.mainBoot,arguments.extractFile, arguments.outFile);
+   }
 
    printf("\n");
    freeFileInfoStruct(&inputFileInfo);

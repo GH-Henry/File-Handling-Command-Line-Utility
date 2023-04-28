@@ -19,6 +19,7 @@ typedef struct
     char *outFile; // output file
     char *delFile; // file to delete 
     bool flags[NUM_FLAGS];
+    char *extractFile; 
 } argument_struct_t;
 
 void printHelp();
