@@ -14,30 +14,22 @@ CFLAGS=-Wall -Wextra -O0 -std=c17 -g3 -fsanitize=address -fsanitize=bounds-stric
 # note address sanitizer "-fsanitize=address" is new. it can be
 # removed from the makefile if it causes problems.
 
-CSRCS=${wildcard src/*.c}
-
-CINCS=-I./include
-SRC = src/extfat.c common/routines.c src/parseArgs.c src/copyExtfat.c src/util.c src/directoryExtfat.c
+CSRCS  = src/copyExtfat.c src/deleteExtfat.c src/directoryExtfatUtility.c src/parseArgs.c src/printExtfat.c src/searchExtfat.c src/util.c
+CSRCS += common/routines.c
+CINCS  = -I./include
 TESTSRC = unit_tests/unitTests.c unit_tests/munit/munit.c
-OBJ = $(SRC:.c=.o)
 
 all:mmap fread unit_tests extfat crc_example
 
 # the utility that is a focus of this project
-extfat:${CSRCS} common/routines.c
+extfat: ${CSRCS} src/extfat.c
 	${CC} ${CFLAGS} ${CINCS} -o $@ $^
 
 # unit tests
-unit_tests: output test
+unit_tests: test
 
-output: ${SRC}
-	${CC} ${CFLAGS} ${CINCS} ${SRC} -o output
-
-test: ${TESTSRC}
-	${CC} ${CFLAGS} ${CINCS} ${TESTSRC} -o test
-
-%.o: %.c
-	${CC} ${CFLAGS} -c $< -o $@
+test: ${TESTSRC} ${CSRCS}
+	${CC} ${CFLAGS} -I./unit_tests/munit_example ${CINCS} -o $@ $^
 
 # this test needs to be deleted once we get some real tests
 # for the problem at hand

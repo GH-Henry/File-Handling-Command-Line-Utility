@@ -2,7 +2,7 @@
 
 #include "munit/munit.h"
 #include "copyExtfat.h"
-#include "directoryExtfat.h"
+#include "directoryExtfatUtility.h"
 #include "extfat.h"
 #include "parseArgs.h"
 #include "routines.h"
