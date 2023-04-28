@@ -1,17 +1,37 @@
 # Extfat utils is a utility to manipulate extfat images.
 
 ### Command Options:
-```bash
--i: Input file { } (required)
--o: Output File
--h: Print Help
--c: Copy
--v: Verify Checksum
--d: Delete File { }
--x: Extract Extfat { }
--p: Print Directory
 ```
-{ }: *Requires file name*
+-i {inputFileName}
+        To specify the input file
+
+-o {outputFileName}
+        To specify the output file
+
+-h
+        Print Help
+
+-c
+        Copy (use with -o)
+
+-v
+        Verify Checksum
+
+-D {targetFile}
+        Delete targetFile in exFAT
+
+-x {targetFile}
+        Extract targetFile in exFAT (use with -o)
+
+-d
+        Print Directory
+```
+{ }: *required argument*
+
+Additional Information:
+* If -o is not specified, then the program will assume the output file is the same as the input file
+* If -x and -c are both active, the program will only execute -c
+* -x and -D do not work on directories
 
 ### Example Invocations:
 ```
@@ -32,7 +52,8 @@
 % make
 
 To run the tests
-% make unit_tests
+% make clean
+% make
 % make tests
 
 ```
