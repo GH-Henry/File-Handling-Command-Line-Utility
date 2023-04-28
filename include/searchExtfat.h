@@ -1,5 +1,4 @@
 #pragma once
-/* This file contains the function declarations of helper functions used by directoryExtfat.c. */
 
 #include <string.h>
 
