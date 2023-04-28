@@ -7,7 +7,7 @@
 -h: Print Help
 -c: Copy
 -v: Verify Checksum
--d: Delete Extfat
+-d: Delete File { }
 -x: Extract Extfat { }
 -p: Print Directory
 ```
@@ -20,8 +20,9 @@
 ./extfat -i test.image -o test2.image -v
 ./extfat -i test.image -o test2.image -d
 ./extfat -i test.image -o test2.image -x test.image
-./extfat -i test.image -c -v -p
-./extfat -i test.image -c -v -p -x test.image 
+./extfat -i test.image -c -v -d -o test2.image
+./extfat -i test.image -D file.txt
+./extfat -i test.image -v -d -x file.txt -o output.txt -D file.txt
 ```
 ## Internals
 
@@ -31,8 +32,8 @@
 % make
 
 To run the tests
-% make tests
 % make unit_tests
+% make tests
 
 ```
 
