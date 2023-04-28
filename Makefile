@@ -26,20 +26,15 @@ extfat: ${CSRCS} src/extfat.c
 	${CC} ${CFLAGS} ${CINCS} -o $@ $^
 
 # unit tests
-unit_tests: test
+unit_tests: munit_test
 
-test: ${TESTSRC} ${CSRCS}
+munit_test: ${TESTSRC} ${CSRCS}
 	${CC} ${CFLAGS} -I./unit_tests/munit_example ${CINCS} -o $@ $^
 
 # this test needs to be deleted once we get some real tests
 # for the problem at hand
 #munit_example:unit_tests/munit
 #	${CC} ${CFLAGS} unit_tests/munit_example -I./unit_tests/munit_example ${CINCS} -o $@ $^
-
-#munit_example:unit_tests
-#	${CC} ${CFLAGS} unit_tests/unitTests.c -I./unit_tests/unitTests
-#	src/extfat.c common/routines.c src/parseArgs.c src/copyExtfat.c src/util.c src/directoryExtfat.c
-#	${CINCS} -c -o $@ $^
 
 # requirements tests
 system_tests: extfat
@@ -91,4 +86,4 @@ run_tests:
 	echo "here i would be running the requirements tests"
 
 clean:
-	-rm -f mmap fread munit_example extfat crc_example output test test_output.bin overwrite.c
+	-rm -f mmap fread munit_example extfat crc_example output munit_test test_output.bin overwrite.c

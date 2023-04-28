@@ -3,3 +3,4 @@ fread
 extfat
 crc_example
 *.image
+munit_test
