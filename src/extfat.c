@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/mman.h>
@@ -9,7 +10,7 @@
 #include "extfat.h"
 #include "parseArgs.h"
 #include "copyExtfat.h"
-#include "directoryExtfat.h"
+#include "directoryExtfatUtility.h"
 #include "util.h"
 
 int main(int argc, char *argv[])
@@ -31,7 +32,7 @@ int main(int argc, char *argv[])
 
    if(arguments.flags[verify] == true)
    {
-      printf("\n=== Verifying the checksums of %s ===\n", inputFileInfo.fileName);
+      printf("\n=== Verifying the checksums of %s ===\n", arguments.inFile);
       if(verifyBoot(&inputFileInfo) == 1)
       {
          printf("Main Boot and Backup Boot checksums are the same.\n");
@@ -44,10 +45,28 @@ int main(int argc, char *argv[])
 
    if(arguments.flags[copy] == true)
    {
-      printf("\n=== Copying %s to %s ===\n", inputFileInfo.fileName, arguments.outFile);
+      printf("\n=== Copying %s to %s ===\n", arguments.inFile, arguments.outFile);
       if( mmapCopy(&inputFileInfo, arguments.outFile) != -1 )
       {
          printf("Copied Succesfully!\n");
+      }
+   }
+
+   if(arguments.flags[extractFile] == true)
+   {
+      if(arguments.extractFile == NULL)
+      {
+         printf("\n=== Missing target file to extract in %s ===\n", arguments.inFile);
+      }
+      else if(strcmp(arguments.outFile, arguments.inFile) == 0)
+      {
+         printf("\n=== Missing output file or output is same as input file ===\n");
+      }
+      else
+      {
+         // Note if file extracted doesn't exist then output file would not be created
+         printf("\n=== Extracting %s from %s into %s===\n", arguments.extractFile, arguments.inFile, arguments.outFile);
+         printfilecontent(inputFileInfo.mainBoot, arguments.extractFile, arguments.outFile);
       }
    }
    
@@ -55,7 +74,7 @@ int main(int argc, char *argv[])
    {
       if(arguments.delFile != NULL) // Checks if a target file to delete is specified
       {
-         printf("\n=== Deleting %s from %s ===\n", arguments.delFile, inputFileInfo.fileName);
+         printf("\n=== Deleting %s from %s ===\n", arguments.delFile, arguments.inFile);
          switch(deleteFileInExfat(&inputFileInfo, arguments.delFile))
          {
             case -1:
@@ -74,23 +93,16 @@ int main(int argc, char *argv[])
       }
       else
       {
-         printf("\n=== Missing target file to delete in %s ===\n", inputFileInfo.fileName);
+         printf("\n=== Missing target file to delete in %s ===\n", arguments.inFile);
       }
    }
 
    if(arguments.flags[printDir] == true)
    {
-      printf("\n=== Printing the directory listing of %s ===\n", inputFileInfo.fileName);
+      printf("\n=== Printing the directory listing of %s ===\n", arguments.inFile);
       printAllDirectoriesAndFiles(&inputFileInfo);
    }
    
-   if(arguments.flags[extractFile] == true)
-   {
-      printf("\n Printing file content to outputfile (%s) Note if file extracted doesn't exist then output file would not be created\n", arguments.extractFile);
-     
-      printfilecontent(inputFileInfo.mainBoot,arguments.extractFile, arguments.outFile);
-   }
-
    printf("\n");
    freeFileInfoStruct(&inputFileInfo);
    return EXIT_SUCCESS;

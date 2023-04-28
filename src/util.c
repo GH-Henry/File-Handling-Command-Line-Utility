@@ -4,7 +4,6 @@
 
 #include "util.h"
 #include "extfat.h"
-#include "directoryExtfat.h"
 #include "routines.h"
 
 void freeFileInfoStruct(fileInfo *file)
