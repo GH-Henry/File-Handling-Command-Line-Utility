@@ -1,28 +1,23 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdint.h>
 
 #include "util.h"
 #include "extfat.h"
-#include "routines.h"
 
-void freeFileInfoStruct(fileInfo *file)
+/* Prints out the help of how to use this program */
+void printHelp()
 {
-   // unmap the file
-   if (munmap(file->mainBoot, file->size))
-   {
-      perror("error from unmap:");
-      exit(0);
-   }
-
-   // close the file
-   if (close(file->fd))
-   {
-      perror("close");
-   }
-   file->fd = 0;
+    printf("HELP ON HOW TO USE\nNote: Input file (-i) required\n\n");
+    printf("Help:\n\"-h\"\n\n");
+    printf("Copy file:\n\"-c\"\n\n");
+    printf("Verify file:\n\"-v\"\n\n");
+    printf("Print directory:\n\"-d\"\n\n");
+    printf("Extract a file:\n\"-x fileName\"\n\n");
+    printf("Delete a file:\n\"-D fileName\"\n\n");
+    printf("Input file (required):\n\"-i fileName\"\n\n");
+    printf("Output file:\n\"-o fileName\"\n\n");
 }
 
+/* Initalizes a fileInfo struct with a given filename */
 fileInfo initFileInfoStruct(char *fileName)
 {
    fileInfo file = {};
@@ -68,10 +63,20 @@ fileInfo initFileInfoStruct(char *fileName)
    return file;
 }
 
-int verifyBoot(fileInfo *file)
+/* Unmaps the image file from memory and closes the corresponding file discriptor */
+void freeFileInfoStruct(fileInfo *file)
 {
-   uint32_t mbrChecksum = BootChecksum((uint8_t*) file->mainBoot, (short) file->SectorSize);
-   uint32_t bbrChecksum = BootChecksum((uint8_t*) file->backupBoot, (short) file->SectorSize);
-   
-   return mbrChecksum == bbrChecksum;
+   // unmap the file
+   if (munmap(file->mainBoot, file->size))
+   {
+      perror("error from unmap:");
+      exit(0);
+   }
+
+   // close the file
+   if (close(file->fd))
+   {
+      perror("close");
+   }
+   file->fd = 0;
 }

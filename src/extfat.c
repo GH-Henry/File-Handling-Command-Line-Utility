@@ -1,11 +1,5 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <unistd.h>
+// #include <stdio.h>
+// #include <string.h>
 
 #include "extfat.h"
 #include "parseArgs.h"
@@ -15,6 +9,7 @@
 
 int main(int argc, char *argv[])
 {
+    // Collects argument info given by the user on execution
     argument_struct_t arguments = parseArgs(argc, argv);
 
     /* ===== Help (-h) ===== */
@@ -56,7 +51,7 @@ int main(int argc, char *argv[])
         printf("\nDISCLAIMER: -c and -x are both active! Will only execute -c");
     }
 
-    if (arguments.flags[copy] == true)
+    if (arguments.flags[copy] == true) // Copy (-c)
     {
         printf("\n=== Copying %s to %s ===\n", arguments.inFile, arguments.outFile);
         if (mmapCopy(&inputFileInfo, arguments.outFile) != -1)
@@ -64,13 +59,13 @@ int main(int argc, char *argv[])
             printf("Copied Succesfully!\n");
         }
     }
-    else if (arguments.flags[extractFile] == true)
+    else if (arguments.flags[extractFile] == true) // Extract (-x)
     {
-        if (arguments.extractFile == NULL)
+        if (arguments.extractFile == NULL) // Checks if a target file to extract is specified
         {
             printf("\n=== Missing target file to extract in %s ===\n", arguments.inFile);
         }
-        else if (strcmp(arguments.outFile, arguments.inFile) == 0)
+        else if (strcmp(arguments.outFile, arguments.inFile) == 0) // Ensure that input will not be overwriten
         {
             printf("\n=== Missing output file or output is same as input file ===\n");
         }
@@ -97,7 +92,7 @@ int main(int argc, char *argv[])
             }
         }
     }
-    /* ===== End of Copy (-c) and Extract (-x) =====*/
+    /* ===== End of Copy (-c) / Extract (-x) =====*/
 
     /* ===== Delete File (-D) ===== */
     if (arguments.flags[deleteFile] == true)

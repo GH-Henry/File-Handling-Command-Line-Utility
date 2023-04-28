@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #define NUM_FLAGS 6
 
+/* used as a way of indexing the flags array inside argument_struct_t */
 enum flagTypes
 {
     help        = 0,
@@ -22,5 +23,6 @@ typedef struct
     bool flags[NUM_FLAGS];
 } argument_struct_t;
 
-void printHelp();
+/* Extracts the cmd line arguments given to the program and stores the data in
+ * an argument_struct_t */
 argument_struct_t parseArgs(int argc, char *argv[]);

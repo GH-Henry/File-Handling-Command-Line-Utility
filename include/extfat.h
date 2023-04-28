@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <stddef.h>
-#include <stdint.h>
 
 // This header defines the layout of data on an extfat disk image.
 // For the details, please refer to

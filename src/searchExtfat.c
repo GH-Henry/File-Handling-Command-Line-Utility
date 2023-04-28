@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "searchExtfat.h"
 
 /* Finds the Nth Cluster in the exFAT image file */
@@ -98,7 +100,8 @@ GDS_t *findFileAndDirEntry(GDS_t *GDS, char *targetFile, void *fp, ClusterInfo *
                 {
                     /* Note: If subGDS is NULL, then nothing changes.
                      * If subGDS is not NULL then a filename match was found, and 
-                     * subGDS is a directory. Therefore, set backupVal equal to subGDS */
+                     * subGDS is a directory. Therefore, backupVal will be the entry
+                     * of a directory with the same name as the target file. */
                     backupVal = subGDS;
                 }
             }

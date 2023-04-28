@@ -105,6 +105,7 @@ void clearFATChainAndData(int fd, void *fp, FATChain *FAT, uint32_t index, Clust
 
     uint32_t temp = index; // Used to remember the next FAT location to got to
 
+    // This while loop runs until the end of the FAT chain is reached
     do
     {
         lseek(fd, offset + index * sizeof(FATChain), SEEK_SET); // Seeks to FAT[index]

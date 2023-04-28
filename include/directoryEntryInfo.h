@@ -2,7 +2,8 @@
 /* This file contains struct, enum, and union definitions of what is used
  * to manipulate and find files in the extfat program. */
 
-#include "extfat.h"
+#include <stdint.h>
+#include <stdlib.h>
 
 typedef struct ClusterInfo
 {

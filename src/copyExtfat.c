@@ -4,6 +4,8 @@
 #include "copyExtfat.h"
 #include "util.h"
 
+/* Opens a file, and writes a at the end of the file (specified by offset). 
+ * This is used to ensure there is enough space to copy data over into the new file */
 void writeByteInFile(char *outputFilename, size_t offset)
 {
     char writeByte = 'B';
@@ -20,7 +22,8 @@ void writeByteInFile(char *outputFilename, size_t offset)
     fclose(fp); // Close the file
 }
 
-int mmapCopy(fileInfo *inputFileInfo, char *outputFilename) // Function that maps the read memory into outputFile
+/* Function that maps the read memory into outputFile */
+int mmapCopy(fileInfo *inputFileInfo, char *outputFilename) 
 {
     if (strcmp(inputFileInfo->fileName, outputFilename) == 0)
     {
@@ -46,7 +49,7 @@ int mmapCopy(fileInfo *inputFileInfo, char *outputFilename) // Function that map
         return -1;
     }
 
-    writeByteInFile(outputFilename, size);
+    writeByteInFile(outputFilename, size); // Ensure there is enough space to copy the data over
 
     printf("the size is %ld\n", size);
 

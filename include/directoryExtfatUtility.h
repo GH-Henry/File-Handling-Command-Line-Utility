@@ -1,12 +1,13 @@
 #pragma once
 
-#include <stdint.h>
-
 #include "extfat.h"
 
 #define FOUND 1
 #define DIRECTORY 0
 #define NOT_FOUND -1
+
+/* Checks if main boot checksum is the same as the backup boot checksum */
+int verifyBoot(fileInfo *file);
 
 /* Prints the entire directory list of the files in the exFAT image file */
 void printAllDirectoriesAndFiles(fileInfo *file);

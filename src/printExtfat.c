@@ -1,7 +1,7 @@
 #include "searchExtfat.h"
 #include "printExtfat.h"
 
-/* ===== Additional internal helper functions/Macro ===== */
+/* ===== Additional internal helper functions/Macros ===== */
 
 #define MIN(x, y) (x <= y) ? x : y
 
@@ -23,7 +23,7 @@ void printFileName(char *ptrToFilename, int lengthOfName, int dirLevel)
     free(filename);
 }
 
-/* ===== End of Additional internal helper functions ===== */
+/* ===== End of Additional internal helper functions/Macros ===== */
 
 
 /* ===== Functions declared in printExtfat.h ===== */
@@ -47,7 +47,7 @@ void printDirectory(GDS_t *GDS, void *fp, ClusterInfo *clustInfo, int dirLevel)
             printFileName((char *)fileNameEntry->FileName, streamExtEntry->NameLength, dirLevel);
 
             // If the attribute of the file is a directory, then recursively call this function to print its
-            // contents, using its corresponding cluster, and increasing the directory level
+            // contents, using its corresponding cluster, and increase the directory level
             if (fileAttributes->Directory)
             {
                 GDS_t *subGDS = findCluster(streamExtEntry->FirstCluster, fp, clustInfo);
@@ -59,22 +59,32 @@ void printDirectory(GDS_t *GDS, void *fp, ClusterInfo *clustInfo, int dirLevel)
     }
 }
 
+/* Prints numBytes from cluster N in the exFAT file into an outfile. */
 void printCluster(int fd, void *fp, FILE *outfile, int N, uint64_t numBytes, ClusterInfo *clustInfo)
 {
-    void *cluster = findCluster(N, fp, clustInfo);
+    void *cluster = findCluster(N, fp, clustInfo); // Gets cluster N
 
-    lseek(fd, (off_t)(cluster - fp), SEEK_SET);
+    lseek(fd, (off_t)(cluster - fp), SEEK_SET); // Seeks to cluster N in the image file
 
-    fwrite(cluster, 1, numBytes, outfile);
+    fwrite(cluster, 1, numBytes, outfile); // Writes numBytes from the cluster into the outputfile
 }
 
+/* Follows the FAT chain to be able to print all data from a file in the exFAT to an outfile.
+ * Uses printCluster() to print data from a cluster to the outfile. */
 void printAllClusterData(int fd, void *fp, FATChain *FAT, FILE *outfile, StreamExt_t *streamExt, ClusterInfo *clustInfo)
 {
-    uint32_t index = streamExt->FirstCluster;
+    uint32_t index = streamExt->FirstCluster; // Setup first location to traverse through in the FAT
 
+    // The total number of bytes of data there is in a file, so it will be the total number of bytes to write.
     uint64_t numBytes = MIN(streamExt->ValidDataLength, streamExt->DataLength);
+    // NOTE: ValidDataLength should be less than DataLength, but just in case, take the MIN of the two.
+
+    // This while loop runs until the end of the FAT chain is reached or there are no more bytes to write.
     do
     {
+        /* If there are more bytes of data in the file than there are in a cluster, only
+         * print the number of bytes in the cluster, and decrease the amount of bytes left to write. 
+         * the rest of file data should be in the other clusters */
         if(numBytes > clustInfo->bytesPerCluster)
         {
             printCluster(fd, fp, outfile, index, clustInfo->bytesPerCluster, clustInfo);
@@ -82,12 +92,13 @@ void printAllClusterData(int fd, void *fp, FATChain *FAT, FILE *outfile, StreamE
         }
         else
         {
+            // Write the rest of the bytes left, and set numBytes to 0
             printCluster(fd, fp, outfile, index, numBytes, clustInfo);
             numBytes = 0;
         }
 
         index = FAT[index]; // sets up for the next FAT entry in the chain
-    } while (index != 0xFFFFFFFF);
+    } while (index != 0xFFFFFFFF && numBytes != 0);
 }
 
 /* ===== End of Functions declared in printExtfat.h ===== */

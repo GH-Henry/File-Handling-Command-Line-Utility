@@ -2,8 +2,18 @@
 #include "searchExtfat.h"
 #include "printExtfat.h"
 #include "deleteExtfat.h"
+#include "routines.h"
 
 #define START_DIR_LVL 1
+
+/* Checks if main boot checksum is the same as the backup boot checksum */
+int verifyBoot(fileInfo *file)
+{
+   uint32_t mbrChecksum = BootChecksum((uint8_t*) file->mainBoot, (short) file->SectorSize);
+   uint32_t bbrChecksum = BootChecksum((uint8_t*) file->backupBoot, (short) file->SectorSize);
+   
+   return mbrChecksum == bbrChecksum;
+}
 
 /* Deletes a target file in the exFAT image.
  * - returns FOUND (1) when the file exists and is deleted
@@ -33,8 +43,8 @@ int deleteFileInExfat(fileInfo *file, char *fileToDelete)
     // Used to check if the target file is a directory
     FileAttributes *fileAttributes = (FileAttributes *)((void *)FileDirEntry + FILE_ATTRIBUTE_OFFSET);
 
-    /* If FileDirEntry is NULL, then findFileAndDirEntry failed to find the file (return -1)
-     * If the entry is a directory, then do not delete it and return 1. */
+    /* If FileDirEntry is NULL, then findFileAndDirEntry failed to find the file (return NOT_FOUND)
+     * If the entry is a directory, then do not delete it and return DIRECTORY. */
     if (FileDirEntry == NULL)
     {
         return NOT_FOUND;
@@ -96,6 +106,10 @@ void printAllDirectoriesAndFiles(fileInfo *file)
     printDirectory(GDS, fp, &clustInfo, START_DIR_LVL);
 }
 
+/* Extracts a target file in the exFAT image to an output file.
+ * - returns FOUND (1) when the target exists and is extracted 
+ * - returns NOT_FOUND (-1) if the target file is not found
+ * - returns DIRECTORY (0) if the target file is a directory (does not extract data) */
 int extractFileInfo(fileInfo *file, char *targetFile, char *outputFilename)
 {
     /* Here to help make the code look cleaner and
@@ -117,8 +131,8 @@ int extractFileInfo(fileInfo *file, char *targetFile, char *outputFilename)
     // Used to check if the target file is a directory
     FileAttributes *fileAttributes = (FileAttributes *)((void *)FileDirEntry + FILE_ATTRIBUTE_OFFSET);
 
-    /* If FileDirEntry is NULL, then findFileAndDirEntry failed to find the file (return -1)
-     * If the entry is a directory, then do not delete it and return 1. */
+    /* If FileDirEntry is NULL, then findFileAndDirEntry failed to find the file (return NOT_FOUND)
+     * If the entry is a directory, then do not extract data and return DIRECTORY. */
     if (FileDirEntry == NULL)
     {
         return NOT_FOUND;

@@ -1,30 +1,13 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
-#include <stdbool.h>
-#include <string.h>
 
-#include "extfat.h"
 #include "parseArgs.h"
-#include "copyExtfat.h"
-#include "routines.h"
 
-void printHelp()
-{
-    printf("HELP ON HOW TO USE\nNote: Input file (-i) required\n\n");
-    printf("Help:\n\"-h\"\n\n");
-    printf("Copy file:\n\"-c\"\n\n");
-    printf("Verify file:\n\"-v\"\n\n");
-    printf("Print directory:\n\"-d\"\n\n");
-    printf("Extract a file:\n\"-x fileName\"\n\n");
-    printf("Delete a file:\n\"-D fileName\"\n\n");
-    printf("Input file (required):\n\"-i fileName\"\n\n");
-    printf("Output file:\n\"-o fileName\"\n\n");
-}
-
+/* Extracts the cmd line arguments given to the program and stores the data in
+ * an argument_struct_t */
 argument_struct_t parseArgs(int argc, char *argv[])
 {
-    argument_struct_t argStruct = {}; // Initializes everything to zero
+    argument_struct_t argStruct = {}; // Initializes everything to zero/NULL
     int opt = 0;
     while ((opt = getopt(argc, argv, "i:o:hcvdx:D:")) != -1)
     {
@@ -71,6 +54,7 @@ argument_struct_t parseArgs(int argc, char *argv[])
         }
     }
 
+    /* If the output file is NULL, then output is equal to input */
     if (argStruct.outFile == NULL)
     {
         argStruct.outFile = argStruct.inFile;

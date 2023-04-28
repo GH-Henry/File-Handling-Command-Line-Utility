@@ -1,7 +1,16 @@
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "extfat.h"
 
-void freeFileInfoStruct(fileInfo *file);
+/* Initalizes a fileInfo struct with a given filename */
 fileInfo initFileInfoStruct(char *fileName);
-int verifyBoot(fileInfo *file);
+
+/* Prints out the help of how to use this program */
+void printHelp();
+
+/* Unmaps the image file from memory and closes the corresponding file discriptor */
+void freeFileInfoStruct(fileInfo *file);
