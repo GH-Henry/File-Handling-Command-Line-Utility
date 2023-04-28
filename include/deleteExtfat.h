@@ -4,10 +4,10 @@
 
 /* Clears the data in the Nth cluster in an exFAT image file and turns off the
  * corresponding bit in the allocation bitmap */
-void clearCluster(int fd, void *fp, int N, ClusterInfo clustInfo, uint8_t *allocBitMap);
+void clearCluster(int fd, void *fp, int N, ClusterInfo *clustInfo, uint8_t *allocBitMap);
 
 /* Clears the FAT chain starting at FAT[index] along with the corresponding cluster data. */
-void clearFATChainAndData(void *fp, int fd, FATChain *FAT, ClusterInfo clustInfo, uint32_t index, uint8_t *allocBitMap);
+void clearFATChainAndData(int fd, void *fp, FATChain *FAT, uint32_t index, ClusterInfo *clustInfo, uint8_t *allocBitMap);
 
 /* Flips the InUseBits of DirectoryEntries until it encounters the last
  * FileNameEntry. */

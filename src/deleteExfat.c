@@ -80,7 +80,7 @@ void clearFileNameData(int fd, void *fp, FileNameEntry *firstEntry, int numOfFil
 
 /* Clears the data in the Nth cluster in an exFAT image file and turns off the
  * corresponding bit in the allocation bitmap with turnOffCorrespondingBitInMap(). */
-void clearCluster(int fd, void *fp, int N, ClusterInfo clustInfo, uint8_t *allocBitMap)
+void clearCluster(int fd, void *fp, int N, ClusterInfo *clustInfo, uint8_t *allocBitMap)
 {
     void *cluster = findCluster(N, fp, clustInfo); // Gets cluster N
 
@@ -88,7 +88,7 @@ void clearCluster(int fd, void *fp, int N, ClusterInfo clustInfo, uint8_t *alloc
     lseek(fd, (off_t)(cluster - fp), SEEK_SET); // Seeks to cluster N in the image file
 
     // Clear the entire cluster to zeros
-    for (size_t i = 0; i < clustInfo.bytesPerCluster; i++)
+    for (size_t i = 0; i < clustInfo->bytesPerCluster; i++)
     {
         write(fd, &zero, 1);
     }
@@ -98,7 +98,7 @@ void clearCluster(int fd, void *fp, int N, ClusterInfo clustInfo, uint8_t *alloc
 
 /* Clears the FAT chain starting at FAT[index] along with the corresponding cluster data.
  * Uses ClearCluster() to clear the cluster data. */
-void clearFATChainAndData(void *fp, int fd, FATChain *FAT, ClusterInfo clustInfo, uint32_t index, uint8_t *allocBitMap)
+void clearFATChainAndData(int fd, void *fp, FATChain *FAT, uint32_t index, ClusterInfo *clustInfo, uint8_t *allocBitMap)
 {
     // Number of bytes from the start of the file to the FAT.
     off_t offset = (size_t)((void *)FAT - fp);

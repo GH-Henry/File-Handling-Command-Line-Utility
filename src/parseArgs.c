@@ -16,6 +16,7 @@ void printHelp()
     printf("Copy file:\n\"-c\"\n\n");
     printf("Verify file:\n\"-v\"\n\n");
     printf("Print directory:\n\"-d\"\n\n");
+    printf("Extract a file:\n\"-x fileName\"\n\n");
     printf("Delete a file:\n\"-D fileName\"\n\n");
     printf("Input file (required):\n\"-i fileName\"\n\n");
     printf("Output file:\n\"-o fileName\"\n\n");
@@ -25,7 +26,7 @@ argument_struct_t parseArgs(int argc, char *argv[])
 {
     argument_struct_t argStruct = {}; // Initializes everything to zero
     int opt = 0;
-    while ((opt = getopt(argc, argv, "i:o::x:D:hcvd")) != -1)
+    while ((opt = getopt(argc, argv, "i:o:hcvdx:D:")) != -1)
     {
         switch (opt)
         {

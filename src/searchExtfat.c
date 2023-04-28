@@ -1,9 +1,9 @@
 #include "searchExtfat.h"
 
 /* Finds the Nth Cluster in the exFAT image file */
-void *findCluster(int N, void *fp, ClusterInfo c)
+void *findCluster(int N, void *fp, ClusterInfo *c)
 {
-    return ((fp + c.clustHeapOffs * c.bytesPerSect) + ((N - 2) * c.bytesPerSect * c.sectPerCluster));
+    return ((fp + c->clustHeapOffs * c->bytesPerSect) + ((N - 2) * c->bytesPerSect * c->sectPerCluster));
 }
 
 /* Copies the filename from FileNameEntries into dest.
@@ -37,7 +37,7 @@ void fetchNameFromExtFAT(char *dest, char *ptrToFilename, int lengthOfName)
  *
  * If there are multiple files with the target name, then return the first non-directory
  * file encountered. */
-GDS_t *findFileAndDirEntry(GDS_t *GDS, char *targetFile, void *fp, ClusterInfo clustInfo)
+GDS_t *findFileAndDirEntry(GDS_t *GDS, char *targetFile, void *fp, ClusterInfo *clustInfo)
 {
     // The intended value to return. Is not NULL when a non-directory file of the target is found
     GDS_t *returnVal = NULL;
@@ -51,12 +51,12 @@ GDS_t *findFileAndDirEntry(GDS_t *GDS, char *targetFile, void *fp, ClusterInfo c
     while (GDS[i].EntryType && returnVal == NULL)
     {
         /* Checks if if current GDS is FileAndDirectoryEntry (FileDir - 0x85)
-         * and the next GenericDirectoryStructure (i+1) is a StreamExtensionEntry (StreamExt - 0xc0)
+         * and the next GenericDirectoryStructure (i+1) is a StreamExtEntry (StreamExt - 0xc0)
          * and the one after that (i+2) is the FileNamEntry (FileName - 0xc1) */
         if (GDS[i].InUse && GDS[i].EntryType == FileDir && GDS[i+1].EntryType == StreamExt && GDS[i+2].EntryType == FileName)
         {
             FileAttributes *fileAttributes = (FileAttributes *)((void *)&GDS[i] + FILE_ATTRIBUTE_OFFSET);
-            StreamExtensionEntry *streamExtEntry = (StreamExtensionEntry *)&GDS[i+1];
+            StreamExt_t *streamExtEntry = (StreamExt_t *)&GDS[i+1];
             FileNameEntry *fileNameEntry = (FileNameEntry *)&GDS[i+2];
 
             // Gets the filename from exFAT into a standard C string. +1 is for '\0'.
@@ -100,7 +100,7 @@ GDS_t *findFileAndDirEntry(GDS_t *GDS, char *targetFile, void *fp, ClusterInfo c
 }
 
 /* Finds the Allocation BitMap Location in the exFAT image file */
-uint8_t *findAllocBitMap(GDS_t *GDS, void *fp, ClusterInfo clustInfo)
+uint8_t *findAllocBitMap(GDS_t *GDS, void *fp, ClusterInfo *clustInfo)
 {
     // Searches for the AllocBitMapEntry
     int i = 0;

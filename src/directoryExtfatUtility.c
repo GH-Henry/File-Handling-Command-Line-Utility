@@ -22,13 +22,13 @@ int deleteFileInExfat(fileInfo *file, char *fileToDelete)
                              file->SectorSize * file->SectorsPerCluster};
 
     // Goes to the first directory entry
-    GDS_t *GDS = findCluster(MB->FirstClusterOfRootDirectory, fp, clustInfo);
+    GDS_t *GDS = findCluster(MB->FirstClusterOfRootDirectory, fp, &clustInfo);
 
     // The allocation bitmap of the exFAT file, will be used when clearing cluster data
-    uint8_t *allocBitMap = findAllocBitMap(GDS, fp, clustInfo);
+    uint8_t *allocBitMap = findAllocBitMap(GDS, fp, &clustInfo);
 
     // Finds the FileAndDirEntry (0x85) of the fileToDelete
-    GDS_t *FileDirEntry = findFileAndDirEntry(GDS, fileToDelete, fp, clustInfo);
+    GDS_t *FileDirEntry = findFileAndDirEntry(GDS, fileToDelete, fp, &clustInfo);
 
     // Used to check if the target file is a directory
     FileAttributes *fileAttributes = (FileAttributes *)((void *)FileDirEntry + FILE_ATTRIBUTE_OFFSET);
@@ -46,7 +46,7 @@ int deleteFileInExfat(fileInfo *file, char *fileToDelete)
 
     /* If GDS is a FileAndDirectoryEntry(0x85 EntryType), then the
      * next entry after that is the StreamExtentionEntry. */
-    StreamExtensionEntry *streamExtEntry = (StreamExtensionEntry *)(FileDirEntry + 1);
+    StreamExt_t *streamExtEntry = (StreamExt_t *)(FileDirEntry + 1);
 
     /* Bit shift right by 4 is the same as integer division by 16.
      * There is always at least 1 filename entry, hence the +1.
@@ -62,11 +62,11 @@ int deleteFileInExfat(fileInfo *file, char *fileToDelete)
          * or just clear a single cluster */
         if (!streamExtEntry->NoFatChain)
         {
-            clearFATChainAndData(fp, fd, file->FAT, clustInfo, streamExtEntry->FirstCluster, allocBitMap);
+            clearFATChainAndData(fd, fp, file->FAT, streamExtEntry->FirstCluster, &clustInfo, allocBitMap);
         }
         else // there is only one cluster of file data
         {
-            clearCluster(fd, fp, streamExtEntry->FirstCluster, clustInfo, allocBitMap);
+            clearCluster(fd, fp, streamExtEntry->FirstCluster, &clustInfo, allocBitMap);
         }
     }
 
@@ -90,13 +90,13 @@ void printAllDirectoriesAndFiles(fileInfo *file)
                              file->SectorSize * file->SectorsPerCluster};
 
     // Goes to the first directory entry entry
-    GDS_t *GDS = findCluster(MB->FirstClusterOfRootDirectory, fp, clustInfo);
+    GDS_t *GDS = findCluster(MB->FirstClusterOfRootDirectory, fp, &clustInfo);
 
     // Prints the directory listing of the exFAT image
-    printDirectory(GDS, fp, clustInfo, START_DIR_LVL);
+    printDirectory(GDS, fp, &clustInfo, START_DIR_LVL);
 }
 
-int extractFileInfo(fileInfo *file, char *Filename, char *outputfilename)
+int extractFileInfo(fileInfo *file, char *targetFile, char *outputFilename)
 {
     /* Here to help make the code look cleaner and
      * reduce number of -> operations */
@@ -108,26 +108,49 @@ int extractFileInfo(fileInfo *file, char *Filename, char *outputfilename)
     ClusterInfo clustInfo = {MB->ClusterHeapOffset, file->SectorSize, file->SectorsPerCluster,
                              file->SectorSize * file->SectorsPerCluster};
 
-    char result;
-    // directory
-    GDS_t *GDS = findCluster(MB->FirstClusterOfRootDirectory, fp, clustInfo);
-    // printf("1(%s)", Filename);
+    // Goes to the first directory entry
+    GDS_t *GDS = findCluster(MB->FirstClusterOfRootDirectory, fp, &clustInfo);
 
-    result = printcontent(GDS, fp, clustInfo, Filename, outputfilename);
-    switch (result)
+    // Finds the FileAndDirEntry (0x85) of the fileToDelete
+    GDS_t *FileDirEntry = findFileAndDirEntry(GDS, targetFile, fp, &clustInfo);
+
+    // Used to check if the target file is a directory
+    FileAttributes *fileAttributes = (FileAttributes *)((void *)FileDirEntry + FILE_ATTRIBUTE_OFFSET);
+
+    /* If FileDirEntry is NULL, then findFileAndDirEntry failed to find the file (return -1)
+     * If the entry is a directory, then do not delete it and return 1. */
+    if (FileDirEntry == NULL)
     {
-        case 'f':
-            printf("File found\n");
-            break;
-        case 'd':
-            printf("Trying to open directory, no action will be done\n");
-            break;
-        case 'i':
-            printf("Not found\n");
-            break;
-        default:
-            printf("Someting wrong with printcontent\n");
+        return NOT_FOUND;
+    }
+    else if (fileAttributes->Directory)
+    {
+        return DIRECTORY;
     }
 
-    return result;
+    /* If GDS is a FileAndDirectoryEntry(0x85 EntryType), then the
+     * next entry after that is the StreamExtentionEntry. */
+    StreamExt_t *streamExtEntry = (StreamExt_t *)(FileDirEntry + 1);
+
+    // Check if the file has a FirstCluster. If the value is zero, then there is no cluster or Fat chain.
+    if (streamExtEntry->FirstCluster != 0)
+    {
+        FILE *outputFile = fopen(outputFilename, "w");
+
+        /* Check if NoFatChain is false (equal to 0) to determine to clear the FAT chain
+         * or just clear a single cluster */
+        if (!streamExtEntry->NoFatChain)
+        {
+            printAllClusterData(fd, fp, file->FAT, outputFile, streamExtEntry, &clustInfo);
+        }
+        else // there is only one cluster of file data
+        {
+            printCluster(fd, fp, outputFile, streamExtEntry->FirstCluster, 
+                         streamExtEntry->ValidDataLength, &clustInfo);
+        }
+
+        fclose(outputFile);
+    }
+
+    return FOUND;
 }

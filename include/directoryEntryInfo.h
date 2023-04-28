@@ -95,11 +95,11 @@ typedef struct StreamExtensionEntry
     uint8_t  NameLength;
     uint16_t NameHash;
     uint8_t  Reserved2[2];
-    uint8_t  ValidDataLength[8];
+    uint64_t ValidDataLength;
     uint8_t  Reserved3[4];
     uint32_t FirstCluster;
     uint64_t DataLength;
-} StreamExtensionEntry;
+} StreamExt_t;
 
 // The FileNameEntry struct is based on the directory entry defined here
 // https://learn.microsoft.com/en-gb/windows/win32/fileio/exfat-specification#77-file-name-directory-entry

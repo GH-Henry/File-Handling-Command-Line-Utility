@@ -25,6 +25,7 @@
         "stdio.h": "c",
         "routines.h": "c",
         "directoryextfat.h": "c",
-        "extfat.h": "c"
+        "extfat.h": "c",
+        "directoryentryinfo.h": "c"
     }
 }

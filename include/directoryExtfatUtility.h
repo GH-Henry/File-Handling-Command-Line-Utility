@@ -21,4 +21,4 @@ int deleteFileInExfat(fileInfo *file, char *fileToDelete);
  * - returns FOUND (1) when the target exists and is extracted 
  * - returns NOT_FOUND (-1) if the target file is not found
  * - returns DIRECTORY (0) if the target file is a directory (does not extract data) */
-int extractFileInfo(fileInfo *file, char *Filename, char *outputfilename);
+int extractFileInfo(fileInfo *file, char *targetFile, char *outputfilename);

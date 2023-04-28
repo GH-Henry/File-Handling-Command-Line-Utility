@@ -16,6 +16,8 @@
 int main(int argc, char *argv[])
 {
     argument_struct_t arguments = parseArgs(argc, argv);
+
+    /* ===== Help (-h) ===== */
     if (arguments.flags[help] == true)
     {
         printHelp();
@@ -27,20 +29,31 @@ int main(int argc, char *argv[])
                "Try \'./extfat -h\' for more information\n");
         return EXIT_FAILURE;
     }
+    /* ===== End of Help (-h) ===== */
 
+    // Has information about the exFAT image file
     fileInfo inputFileInfo = initFileInfoStruct(arguments.inFile);
 
+    /* ===== Verify (-v) ===== */
     if (arguments.flags[verify] == true)
     {
         printf("\n=== Verifying the checksums of %s ===\n", arguments.inFile);
         if (verifyBoot(&inputFileInfo) == 1)
         {
-            printf("Main Boot and Backup Boot checksums are the same.\n");
+            printf("Main Boot and Backup Boot checksums are the same\n");
         }
         else
         {
-            printf("Main Boot and Backup Boot checksums are not the same.\n");
+            printf("Main Boot and Backup Boot checksums are not the same\n");
         }
+    }
+    /* ===== End of Verify (-v) ===== */
+
+
+    /* ===== Copy (-c) / Extract (-x) ===== */
+    if (arguments.flags[copy] == true && arguments.flags[extractFile] == true)
+    {
+        printf("\nDISCLAIMER: -c and -x are both active! Will only execute -c");
     }
 
     if (arguments.flags[copy] == true)
@@ -51,8 +64,7 @@ int main(int argc, char *argv[])
             printf("Copied Succesfully!\n");
         }
     }
-
-    if (arguments.flags[extractFile] == true)
+    else if (arguments.flags[extractFile] == true)
     {
         if (arguments.extractFile == NULL)
         {
@@ -64,46 +76,69 @@ int main(int argc, char *argv[])
         }
         else
         {
-            // Note if file extracted doesn't exist then output file would not be created
-            printf("\n=== Extracting %s from %s into %s===\n", arguments.extractFile, arguments.inFile, arguments.outFile);
-            extractFileInfo(&inputFileInfo, arguments.extractFile, arguments.outFile);
+            printf("\n=== Extracting %s from %s into %s ===\n", arguments.extractFile, 
+                   arguments.inFile, arguments.outFile);
+            switch (extractFileInfo(&inputFileInfo, arguments.extractFile, arguments.outFile))
+            {
+                case FOUND:
+                    // Target file found and extracted
+                    printf("Found %s\n%s has been extracted to %s\n", arguments.extractFile, 
+                           arguments.extractFile, arguments.outFile);
+                    break;
+                case DIRECTORY:
+                    // Target file is a directory
+                    printf("Found %s\n%s is a directory, unable to extract\n", 
+                           arguments.extractFile, arguments.extractFile);
+                    break;
+                case NOT_FOUND:
+                    // Target file does not exist
+                    printf("Unable to find %s\n", arguments.extractFile);
+                    break;
+            }
         }
     }
+    /* ===== End of Copy (-c) and Extract (-x) =====*/
 
+    /* ===== Delete File (-D) ===== */
     if (arguments.flags[deleteFile] == true)
     {
-        if (arguments.delFile != NULL) // Checks if a target file to delete is specified
+        if (arguments.delFile == NULL) // Checks if a target file to delete is specified
+        {
+            printf("\n=== Missing target file to delete in %s ===\n", arguments.inFile);
+        }
+        else
         {
             printf("\n=== Deleting %s from %s ===\n", arguments.delFile, arguments.inFile);
             switch (deleteFileInExfat(&inputFileInfo, arguments.delFile))
             {
                 case FOUND:
                     // Target file found and deleted
-                    printf("Found %s\n%s has been deleted.\n", arguments.delFile, arguments.delFile);
+                    printf("Found %s\n%s has been deleted\n", arguments.delFile, arguments.delFile);
                     break;
                 case DIRECTORY:
                     // Target file is a directory
-                    printf("Found %s\n%s is a directory, unable to delete.\n", arguments.delFile, arguments.delFile);
+                    printf("Found %s\n%s is a directory, unable to delete\n", 
+                           arguments.delFile, arguments.delFile);
                     break;
                 case NOT_FOUND:
                     // Target file does not exist
-                    printf("Unable to find %s.\n", arguments.delFile);
+                    printf("Unable to find %s\n", arguments.delFile);
                     break;
             }
         }
-        else
-        {
-            printf("\n=== Missing target file to delete in %s ===\n", arguments.inFile);
-        }
     }
+    /* ===== End of Delete File (-D) ===== */
 
+    /* ===== Print Directory (-d) ===== */
     if (arguments.flags[printDir] == true)
     {
         printf("\n=== Printing the directory listing of %s ===\n", arguments.inFile);
         printAllDirectoriesAndFiles(&inputFileInfo);
     }
+    /* ===== Print Directory (-d) ===== */
 
     printf("\n");
     freeFileInfoStruct(&inputFileInfo);
+
     return EXIT_SUCCESS;
 }
