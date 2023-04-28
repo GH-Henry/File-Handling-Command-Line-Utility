@@ -132,11 +132,11 @@ int extractFileInfo(fileInfo *file, char *targetFile, char *outputFilename)
      * next entry after that is the StreamExtentionEntry. */
     StreamExt_t *streamExtEntry = (StreamExt_t *)(FileDirEntry + 1);
 
+    FILE *outputFile = fopen(outputFilename, "w");
+
     // Check if the file has a FirstCluster. If the value is zero, then there is no cluster or Fat chain.
     if (streamExtEntry->FirstCluster != 0)
     {
-        FILE *outputFile = fopen(outputFilename, "w");
-
         /* Check if NoFatChain is false (equal to 0) to determine to clear the FAT chain
          * or just clear a single cluster */
         if (!streamExtEntry->NoFatChain)
@@ -149,8 +149,9 @@ int extractFileInfo(fileInfo *file, char *targetFile, char *outputFilename)
                          streamExtEntry->ValidDataLength, &clustInfo);
         }
 
-        fclose(outputFile);
     }
+
+    fclose(outputFile);
 
     return FOUND;
 }

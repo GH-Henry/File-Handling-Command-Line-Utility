@@ -87,7 +87,7 @@ void printAllClusterData(int fd, void *fp, FATChain *FAT, FILE *outfile, StreamE
         }
 
         index = FAT[index]; // sets up for the next FAT entry in the chain
-    } while (index != 0xFFFFFFFF || numBytes != 0);
+    } while (index != 0xFFFFFFFF);
 }
 
 /* ===== End of Functions declared in printExtfat.h ===== */
