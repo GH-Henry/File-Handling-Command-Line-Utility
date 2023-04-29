@@ -47,6 +47,29 @@ fileInfo initFileInfoStruct(char *fileName)
    return file;
 }
 
+void *test_initFileInfoStruct()
+{
+    char *filename = "test.image";
+    fileInfo file = initFileInfoStruct(filename);
+
+    // Check if the file descriptor is valid
+    munit_assert_int(file.fd, !=, -1);
+
+    // Check if the file size is valid
+    munit_assert_int(file.size, ==, 0);
+
+    // Check if the sector size is valid
+    munit_assert_int(file.SectorSize, ==, 0);
+
+    // Check if the file name is valid
+    munit_assert_string_equal(file.fileName, filename);
+
+    // Check if the FAT pointer is valid
+    munit_assert_int(*(uint32_t *)file.FAT, ==, 0);
+
+    return NULL;
+}
+
 MunitResult test_mmapCopy()
 {
     fileInfo inputFileInfo = initFileInfoStruct("test.image");
@@ -226,8 +249,61 @@ MunitResult test_randomFunction()
     return MUNIT_OK;
 }
 
+argument_struct_t parseArgs()
+{
+   argument_struct_t argStruct = {};
+   char *str = "-i test.image -o test2.image -c -v -d";
+   int argc = 5;
+   int opt = 0;
+   while((opt = getopt(argc, str, "i:o:chvd")) != -1)
+   {
+      switch(opt)
+      {
+         case 'i':
+            argStruct.inFile = optarg;
+            break;
+         case 'o':
+            if(optarg != NULL)
+               argStruct.outFile = optarg;
+            else
+               argStruct.outFile = argStruct.inFile;
+            break;
+         case 'h':
+            //help
+            argStruct.flags[help] = true;
+            break;
+         case 'c':
+            //copy
+            argStruct.flags[copy] = true;
+            break;
+         case 'v':
+            //verify
+            argStruct.flags[verify] = true;
+            break;
+         case 'd':
+            argStruct.flags[printDirectory] = true;
+            break;
+         case '?':
+            if(optopt == 'o')
+            {
+               argStruct.outFile = argStruct.inFile;
+            }
+            break;
+      }
+   }
+
+   if(argStruct.outFile == NULL)
+   {
+      argStruct.outFile = argStruct.inFile;
+   }
+
+   return argStruct;
+}
+
+
 MunitTest tests[] = 
 {
+    {"/test_initFileInfoStruct", test_initFileInfoStruct, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/test_mmapCopy", test_mmapCopy, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/test_printName", test_printName, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/test_writeByteInFile", test_writeByteInFile, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},

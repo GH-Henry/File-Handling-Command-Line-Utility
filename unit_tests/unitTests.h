@@ -7,6 +7,7 @@
 #include "parseArgs.h"
 #include "routines.h"
 #include "util.h"
+#include "getopt.h"
 
 fileInfo initFileInfoStruct(char *fileName);
 MunitResult test_mmapCopy();
