@@ -10,6 +10,7 @@
 #include "getopt.h"
 
 fileInfo initFileInfoStruct(char *fileName);
+MunitResult test_initFileInfoStruct();
 MunitResult test_mmapCopy();
 
 MunitResult test_writeByteInFile();

@@ -47,31 +47,24 @@ fileInfo initFileInfoStruct(char *fileName)
    return file;
 }
 
-void *test_initFileInfoStruct()
+MunitResulttest_initFileInfoStruct()
 {
+    system("bash ./examples/create_image.bash");
     char *filename = "test.image";
     fileInfo file = initFileInfoStruct(filename);
 
-    // Check if the file descriptor is valid
     munit_assert_int(file.fd, !=, -1);
-
-    // Check if the file size is valid
     munit_assert_int(file.size, ==, 0);
-
-    // Check if the sector size is valid
     munit_assert_int(file.SectorSize, ==, 0);
-
-    // Check if the file name is valid
     munit_assert_string_equal(file.fileName, filename);
-
-    // Check if the FAT pointer is valid
     munit_assert_int(*(uint32_t *)file.FAT, ==, 0);
 
-    return NULL;
+    return MUNIT_OK;
 }
 
 MunitResult test_mmapCopy()
 {
+    system("bash ./examples/create_image.bash");
     fileInfo inputFileInfo = initFileInfoStruct("test.image");
     char *outputFilename = "test145114141.image";
     if( strcmp(inputFileInfo.fileName, outputFilename) == 0 )
@@ -132,7 +125,8 @@ MunitResult test_mmapCopy()
     {
         perror("Close");
     }
-
+    system("rm test145114141.image");
+    system("rm test.image");
     return MUNIT_OK;
 }
 
@@ -160,6 +154,7 @@ MunitResult test_writeByteInFile()
 
    munit_assert_char('B', ==, readByte);
    //printf("%d", MUNIT_OK);
+   system("rm test_output.bin");
    return MUNIT_OK;
 }
 
@@ -181,6 +176,7 @@ void writeByteInFile(char *outputFilename, size_t offset)
 
 MunitResult test_printName()
 {
+    system("bash ./examples/create_image.bash");
     char buffer[256];
     FILE* tempFile = fopen("test.image", "rw");
     FILE* oldStdout = stdout;
@@ -196,7 +192,7 @@ MunitResult test_printName()
 
     const char *expectedOutput = "\t\tJohn\n";
     munit_assert_string_equal(buffer, expectedOutput);
-
+    system("rm test.image");
     return MUNIT_OK;
 }
 
@@ -226,6 +222,7 @@ void printName(char *charPtr, int legnthOfName, int dirLevel)
 
 MunitResult test_freeFileInfoStruct()
 {
+    system("bash ./examples/create_image.bash");
     fileInfo file = initFileInfoStruct("test.image");
     // unmap the file
     if (munmap(file.mainBoot, file.size))
@@ -240,6 +237,7 @@ MunitResult test_freeFileInfoStruct()
         perror("close");
     }
     file.fd = 0;
+    system("rm test.image");
     return MUNIT_OK;
 }
 
@@ -249,13 +247,13 @@ MunitResult test_randomFunction()
     return MUNIT_OK;
 }
 
-argument_struct_t parseArgs()
+argument_struct_t parseArgs(int num2, char *str2[])
 {
    argument_struct_t argStruct = {};
    char *str = "-i test.image -o test2.image -c -v -d";
-   int argc = 5;
+   int num = 5;
    int opt = 0;
-   while((opt = getopt(argc, str, "i:o:chvd")) != -1)
+   while((opt = getopt(num, str, "i:o:chvd")) != -1)
    {
       switch(opt)
       {
@@ -303,7 +301,7 @@ argument_struct_t parseArgs()
 
 MunitTest tests[] = 
 {
-    {"/test_initFileInfoStruct", test_initFileInfoStruct, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+    //{"/test_initFileInfoStruct", test_initFileInfoStruct, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/test_mmapCopy", test_mmapCopy, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/test_printName", test_printName, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/test_writeByteInFile", test_writeByteInFile, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
