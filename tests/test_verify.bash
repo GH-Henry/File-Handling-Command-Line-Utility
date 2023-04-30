@@ -1,8 +1,10 @@
 #!/bin/bash
 #Here I overwrite a byte in so Verify should return "Not the same" If it does then this test passes else it will not pass and return 1
 echo "Verify Test"
+bash ./tests/clean_up.bash
+bash ./examples/create_image.bash 
 IntactSum=$(./extfat -i test.image -v)
-IntactOutput="Main Boot and Backup Boot checksums are the same."
+IntactOutput="Main Boot and Backup Boot checksums are the same"
 if [[ $IntactOutput == *"$IntactSum"* ]]; then
     result=0
 else
@@ -13,7 +15,7 @@ gcc -Wall examples/overwrite.c
 ./a.out
 ./extfat -i test.image -v
 output=$(./extfat -i test.image -v)
-errorMessage="Main Boot and Backup Boot checksums are not the same."
+errorMessage="Main Boot and Backup Boot checksums are NOT the same"
 #Check to see if output contains the error message
 if [[ $output == *"$errorMessage"* ]]; then
     result=0

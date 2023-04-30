@@ -34,7 +34,7 @@ fi
 gcc -Wall examples/overwrite.c
 ./a.out
 output2=$(./extfat -v -c -d -i test.image -o test2.image)
-errorMessage="Main Boot and Backup Boot checksums are not the same."
+errorMessage="Main Boot and Backup Boot checksums are NOT the same"
 if [[ $output2 == *"$errorMessage"* ]]; then
     result=0
 else

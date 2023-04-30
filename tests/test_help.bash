@@ -21,6 +21,12 @@ Verify file:
 Print directory:
 \"-d\"
 
+Extract a file:
+\"-x fileName\"
+
+Delete a file:
+\"-D fileName\"
+
 Input file (required):
 \"-i fileName\"
 
