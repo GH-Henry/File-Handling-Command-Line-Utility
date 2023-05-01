@@ -8,8 +8,12 @@
 argument_struct_t parseArgs(int argc, char *argv[])
 {
     argument_struct_t argStruct = {}; // Initializes everything to zero/NULL
+
+    /* resetting optind, which is the next element to be processed in argv 
+     * back to 1 allow multiple calls of getopt without skipping any values */
+    optind = 1;
     int opt = 0;
-    while ((opt = getopt(argc, argv, "i:o:hcvdx:D:")) != -1)
+    while ((opt = getopt(argc, argv, "i:o:x:D:hcvd")) != -1)
     {
         switch (opt)
         {
