@@ -1,5 +1,18 @@
 #include "unitTests.h"
 
+MunitResult test_initFileInfoStruct()
+{
+    system("bash ./examples/create_image.bash");
+    char *filename = "test.image";
+    fileInfo file = initFileInfoStruct(filename);
+
+    munit_assert_int(file.fd, !=, -1);
+    munit_assert_string_equal(file.fileName, filename);
+
+    system("rm test.image");
+    return MUNIT_OK;
+}
+
 MunitResult test_mmapCopy()
 {
     // Runs bash script to create an image file
@@ -93,20 +106,76 @@ MunitResult test_freeFileInfoStruct()
     return MUNIT_OK;
 }
 
-MunitResult test_randomFunction()
+MunitResult test_verifyBoot()
 {
-    // to be done later :3
+   system("bash ./examples/create_image.bash");
+   fileInfo file = initFileInfoStruct("test.image");
+
+   uint32_t mbrChecksum = BootChecksum((uint8_t*) file.mainBoot, (short) file.SectorSize);
+   uint32_t bbrChecksum = BootChecksum((uint8_t*) file.backupBoot, (short) file.SectorSize);
+
+   munit_assert_uint32(mbrChecksum, ==, bbrChecksum);
+
+   system("rm test.image");
+   return MUNIT_OK;
+}
+
+MunitResult test_parseArgs()
+{
+    system("bash ./examples/create_image.bash");
+
+    argument_struct_t argStruct1 = parseArgs(0, NULL);
+
+    munit_assert_null(argStruct1.inFile);
+    munit_assert_null(argStruct1.outFile);
+    munit_assert_null(argStruct1.delFile);
+    munit_assert_null(argStruct1.extractFile);
+    for(int i = 0; i < 6; i++)
+    {
+        munit_assert_false(argStruct1.flags[i]);
+    }
+
+    char *args[] = {"./extfat",
+                    "-i",
+                    "test.image",       //2
+                    "-o",
+                    "test2.image",      //4
+                    "-v",
+                    "-c",
+                    "-d",
+                    "-h",
+                    "-x",
+                    "targetExtract",    //10
+                    "-D",
+                    "targetDelete",     //12
+                    NULL
+                    };
+
+    argument_struct_t argStruct2 = parseArgs(13, args);
+    bool flagResult2[6] = {true, true, true, true, true, true};
+
+    munit_assert_ptr_equal(argStruct2.inFile, args[2]);
+    munit_assert_ptr_equal(argStruct2.outFile, args[4]);
+    munit_assert_ptr_equal(argStruct2.extractFile, args[10]);
+    munit_assert_ptr_equal(argStruct2.delFile, args[12]);
+
+    munit_assert_memory_equal(sizeof(flagResult2), argStruct2.flags, flagResult2);
+
+    system("rm test.image");
+    system("rm test2.image");
     return MUNIT_OK;
 }
 
-MunitTest tests[] =
-    {
-        {"/test_mmapCopy", test_mmapCopy, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
-        //{"/test_printName", test_printName, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
-        {"/test_writeByteInFile", test_writeByteInFile, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
-        {"/test_freeFileInfoStruct", test_freeFileInfoStruct, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
-        {"/test_randomFunction", test_randomFunction, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
-        {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}};
+MunitTest tests[] = 
+{
+    {"/test_initFileInfoStruct", test_initFileInfoStruct, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+    {"/test_mmapCopy", test_mmapCopy, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+    {"/test_writeByteInFile", test_writeByteInFile, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+    {"/test_freeFileInfoStruct", test_freeFileInfoStruct, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+    {"/test_verifyBoot", test_verifyBoot, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+    {"/test_parseArgs", test_parseArgs, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+    {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}
+};
 
 int main(int argc, char *argv[MUNIT_ARRAY_PARAM(argc + 1)])
 {
