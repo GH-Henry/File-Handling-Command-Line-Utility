@@ -135,6 +135,20 @@ MunitResult test_parseArgs()
         munit_assert_false(argStruct1.flags[i]);
     }
 
+    char *argsPartial[] = { "./extfat",
+                            "-i",
+                            "test.image",       //2
+                            "-cv",
+                            };
+
+    argument_struct_t argStructPartial = parseArgs(6, argsPartial);
+    bool flagResultPartial[6] = {false, true, true, false, false, false};
+
+    munit_assert_ptr_equal(argStructPartial.inFile, argsPartial[2]);
+    munit_assert_ptr_equal(argStructPartial.outFile, argsPartial[2]);
+    munit_assert_ptr_equal(argStructPartial.outFile, argStructPartial.inFile);
+    munit_assert_memory_equal(sizeof(flagResultPartial), argStructPartial.flags, flagResultPartial);
+
     char *args[] = {"./extfat",
                     "-i",
                     "test.image",       //2
@@ -158,11 +172,9 @@ MunitResult test_parseArgs()
     munit_assert_ptr_equal(argStruct2.outFile, args[4]);
     munit_assert_ptr_equal(argStruct2.extractFile, args[10]);
     munit_assert_ptr_equal(argStruct2.delFile, args[12]);
-
     munit_assert_memory_equal(sizeof(flagResult2), argStruct2.flags, flagResult2);
 
-    system("rm test.image");
-    system("rm test2.image");
+    system("rm test.image test2.image");
     return MUNIT_OK;
 }
 
