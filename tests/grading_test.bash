@@ -47,4 +47,5 @@ do
         done
     done
 done
+rm output.txt
 echo "$TestCount ran $TestFailed failed $TestPassed passed."

@@ -4,7 +4,9 @@ echo "Verify Test"
 bash ./tests/clean_up.bash
 bash ./examples/create_image.bash
 IntactSum=$(./extfat -i test.image -v)
-if [[ $IntactSum == *"Main Boot and Backup Boot checksums are the same"* ]]; then
+message="=== Verifying the checksums of test.image ==="
+if [[ $IntactSum == *"Main Boot and Backup Boot checksums are the same"* ]] && 
+   [[ $IntactSum == *"$message"* ]]; then
     echo "Result is 0"
     result=0
 else
@@ -18,7 +20,8 @@ gcc -Wall examples/overwrite.c
 output=$(./extfat -i test.image -v)
 errorMessage="Main Boot and Backup Boot checksums are NOT the same"
 #Check to see if output contains the error message
-if [[ $output == *"$errorMessage"* ]]; then
+if [[ $output == *"$errorMessage"* ]] && 
+   [[ $output == *"$message"* ]]; then
     result=$((result + 0))
 else
     result=1

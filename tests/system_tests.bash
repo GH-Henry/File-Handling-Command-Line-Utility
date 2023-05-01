@@ -33,7 +33,7 @@ do
      bash "tests/clean_up.bash"
      done
 done
-
+rm output.txt
 echo "== Test Summary =="
 echo "Total tests run: $TestCount"
 echo "Tests passed: $TestPassed"

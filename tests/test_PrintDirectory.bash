@@ -14,9 +14,11 @@ sync
 ./extfat -i test.image -d 
 #I put mmap.c dir1 and file inside the image
 output=$(./extfat -i test.image -d)
+message="=== Printing the directory listing of test.image ==="
 
 # Check if the output contains the expected file names
-if [[ $output == *"file"* ]] && [[ $output == *"mmap.c"* ]] && [[ $output == *"dir1"* ]] ; then
+if [[ $output == *"file"* ]] && [[ $output == *"mmap.c"* ]] &&
+   [[ $output == *"dir1"* ]] && [[ $output == *"$message"* ]]; then
     result=0
 else
     result=1
