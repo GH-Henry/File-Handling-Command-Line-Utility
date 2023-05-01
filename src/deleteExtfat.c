@@ -3,7 +3,7 @@
 
 /* ===== Additional internal helper functions ===== */
 
-/* Turns off the corresponding bit for cluster N in the bitmap. */
+/* Turn off the corresponding bit for cluster N in the bitmap. */
 void turnOffCorrespondingBitInMap(int fd, void *fp, int N, uint8_t *allocBitMap)
 {
     /* Each bit in the bitmap corresponds to a cluster.

@@ -22,7 +22,8 @@ void writeByteInFile(char *outputFilename, size_t offset)
     fclose(fp); // Close the file
 }
 
-/* Function that maps the read memory into outputFile */
+/* Takes in an input and output file. And uses mmap() to copy the contents from the
+ * input file into the output file, and returns 0 if it is a success and a -1 otherwise */
 int mmapCopy(fileInfo *inputFileInfo, char *outputFilename) 
 {
     if (strcmp(inputFileInfo->fileName, outputFilename) == 0)
