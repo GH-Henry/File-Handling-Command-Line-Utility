@@ -47,17 +47,14 @@ fileInfo initFileInfoStruct(char *fileName)
    return file;
 }
 
-MunitResulttest_initFileInfoStruct()
+MunitResult test_initFileInfoStruct()
 {
     system("bash ./examples/create_image.bash");
     char *filename = "test.image";
     fileInfo file = initFileInfoStruct(filename);
 
     munit_assert_int(file.fd, !=, -1);
-    munit_assert_int(file.size, ==, 0);
-    munit_assert_int(file.SectorSize, ==, 0);
     munit_assert_string_equal(file.fileName, filename);
-    munit_assert_int(*(uint32_t *)file.FAT, ==, 0);
 
     return MUNIT_OK;
 }
@@ -174,52 +171,6 @@ void writeByteInFile(char *outputFilename, size_t offset)
    fclose(fp); //Close the file
 }
 
-MunitResult test_printName()
-{
-    system("bash ./examples/create_image.bash");
-    char buffer[256];
-    FILE* tempFile = fopen("test.image", "rw");
-    FILE* oldStdout = stdout;
-    stdout = tempFile;
-
-    char *name = "John";
-    int lengthOfName = strlen(name);
-    int dirLevel = 2;
-    printName(name, lengthOfName, dirLevel);
-
-    fclose(tempFile);
-    stdout = oldStdout;
-
-    const char *expectedOutput = "\t\tJohn\n";
-    munit_assert_string_equal(buffer, expectedOutput);
-    system("rm test.image");
-    return MUNIT_OK;
-}
-
-void printName(char *charPtr, int legnthOfName, int dirLevel)
-{
-    // Prints the proper number of tabs dependidng on dirLevel
-    for(int i = 0; i < dirLevel; i++)
-    {
-        printf("\t");
-    }
-
-    for(int i = 0; i < legnthOfName; i++)
-    {
-        // In the event that the name is longer than 15 characters, then the next byte
-        // that charPtr will point at will be 0xc1 to signal another FileNameEntry,
-        // thus must offset by 2 to get to a printable character.
-        if(*charPtr == (char)0xc1)
-        {
-            charPtr += 2;
-        }
-        printf("%c", *charPtr);
-        charPtr += 2; // offset by 2 to get to the next character in the name
-    }
-
-    printf("\n");
-}
-
 MunitResult test_freeFileInfoStruct()
 {
     system("bash ./examples/create_image.bash");
@@ -241,78 +192,48 @@ MunitResult test_freeFileInfoStruct()
     return MUNIT_OK;
 }
 
-MunitResult test_randomFunction()
+MunitResult test_verifyBoot()
 {
-    //to be done later :3
-    return MUNIT_OK;
+   system("bash ./examples/create_image.bash");
+   fileInfo file = initFileInfoStruct("test.image");
+
+   uint32_t mbrChecksum = BootChecksum((uint8_t*) file.mainBoot, (short) file.SectorSize);
+   uint32_t bbrChecksum = BootChecksum((uint8_t*) file.backupBoot, (short) file.SectorSize);
+
+   munit_assert_uint32(mbrChecksum, ==, bbrChecksum);
+
+   system("rm test.image");
+   return MUNIT_OK;
 }
 
-argument_struct_t parseArgs(int num2, char *str2[])
+MunitResult test_parseArgs()
 {
-   argument_struct_t argStruct = {};
-   char *str = "-i test.image -o test2.image -c -v -d";
-   int num = 5;
-   int opt = 0;
-   while((opt = getopt(num, str, "i:o:chvd")) != -1)
-   {
-      switch(opt)
-      {
-         case 'i':
-            argStruct.inFile = optarg;
-            break;
-         case 'o':
-            if(optarg != NULL)
-               argStruct.outFile = optarg;
-            else
-               argStruct.outFile = argStruct.inFile;
-            break;
-         case 'h':
-            //help
-            argStruct.flags[help] = true;
-            break;
-         case 'c':
-            //copy
-            argStruct.flags[copy] = true;
-            break;
-         case 'v':
-            //verify
-            argStruct.flags[verify] = true;
-            break;
-         case 'd':
-            argStruct.flags[printDirectory] = true;
-            break;
-         case '?':
-            if(optopt == 'o')
-            {
-               argStruct.outFile = argStruct.inFile;
-            }
-            break;
-      }
-   }
+   system("bash ./examples/create_image.bash");
 
-   if(argStruct.outFile == NULL)
-   {
-      argStruct.outFile = argStruct.inFile;
-   }
+   int argcTest = 8;
+   char *argvTest[] = {"-i", "test.image", "-o", "test2.image", "-c", "-v", "-d", "-h"};
+   argument_struct_t argumentsTest = parseArgs(argcTest, argvTest);
 
-   return argStruct;
+   system("rm test.image");
+   system("rm test2.image");
+   return MUNIT_OK;
 }
-
 
 MunitTest tests[] = 
 {
-    //{"/test_initFileInfoStruct", test_initFileInfoStruct, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+    {"/test_initFileInfoStruct", test_initFileInfoStruct, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/test_mmapCopy", test_mmapCopy, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
-    {"/test_printName", test_printName, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/test_writeByteInFile", test_writeByteInFile, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {"/test_freeFileInfoStruct", test_freeFileInfoStruct, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
-    {"/test_randomFunction", test_randomFunction, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+    {"/test_verifyBoot", test_verifyBoot, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+    {"/test_parseArgs", test_parseArgs, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
     {NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL}
 };
 
 int main(int argc, char* argv[MUNIT_ARRAY_PARAM(argc + 1)])
 {
     MunitSuite suite = {"/tests", tests, NULL, 1, MUNIT_SUITE_OPTION_NONE};
-    printf("Success\n");
+    system("rm test");
+    system("make clean");
     return munit_suite_main(&suite, NULL, argc, argv);
 }

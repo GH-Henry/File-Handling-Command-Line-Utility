@@ -16,7 +16,7 @@ CFLAGS=-Wall -Wextra -O0 -std=c17 -g3 -fsanitize=address -fsanitize=bounds-stric
 
 CINCS=-I./include
 SRC = src/extfat.c common/routines.c src/parseArgs.c src/copyExtfat.c src/util.c src/directoryExtfat.c
-TESTSRC = unit_tests/unitTests.c unit_tests/munit/munit.c
+TESTSRC = unit_tests/unitTests.c unit_tests/munit/munit.c common/routines.c src/parseArgs.c
 OBJ = $(SRC:.c=.o)
 
 all:mmap fread unit_tests extfat crc_example
