@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
         printf("\n=== Copying %s to %s ===\n", arguments.inFile, arguments.outFile);
         if (mmapCopy(&inputFileInfo, arguments.outFile) != -1)
         {
-            printf("Copied Succesfully!\n");
+            printf("Copied Successfully!\n");
         }
     }
     else if (arguments.flags[extractFile] == true) // Extract (-x)
