@@ -15,7 +15,7 @@ else
     result=1;
 fi
 
-
+rm output.txt
 echo "Result is $result"
 exit $result
 

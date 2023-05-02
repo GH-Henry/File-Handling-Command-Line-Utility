@@ -17,7 +17,7 @@ else
 fi
 
 #Now let's check that the first mmap.c is what is being extracted :)
-diff /tmp/d/mmap.c /workspaces/cse3310_s004_group_18/examples/mmap.c
+diff /tmp/d/mmap.c output.txt
 #When diff returns exit code 0 it means it matches
 if [ $? -eq 0 ]; then
     echo "Files are identical"
@@ -27,6 +27,6 @@ else
     result=1;
 fi
 
-
+rm output.txt
 echo "Result is $result"
 exit $result

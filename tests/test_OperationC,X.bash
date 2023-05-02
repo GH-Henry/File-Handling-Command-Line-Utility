@@ -8,5 +8,6 @@ if [[ $output == *"DISCLAIMER: -c and -x are both active! Will only execute -c"*
 else
     result=1
 fi
+rm output.txt
 echo "Result is $result "
 exit $result
